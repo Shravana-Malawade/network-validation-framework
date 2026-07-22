@@ -1,0 +1,35 @@
+framework:
+  name: Network Validation Framework
+  version: "1.0"
+  author: Shravana Malawade
+
+active_device: device1
+
+devices:
+  device1:
+    board: Raspberry Pi 3 Model B
+    host: 192.168.1.10
+    username: pi
+    password: raspberry
+
+  device2:
+    board: Raspberry Pi 5
+    host: 192.168.1.20
+    username: pi
+    password: raspberry
+
+validation:
+  layer1: true
+  layer2: true
+  layer3: true
+  layer4: true
+  application: true
+
+reports:
+  html: true
+  csv: true
+  json: true
+
+logging:
+  path: logs/framework.log
+  level: INFO
