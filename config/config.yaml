@@ -8,16 +8,16 @@ active_device: device1
 
 devices:
   device1:
-    board: Raspberry Pi 3 Model B
-    host: 192.168.1.10
-    username: pi
-    password: raspberry
+    board: Raspberry Pi 3 
+    host: 192.168.31.35
+    username: pi3
+    password: raspberrypi
 
   device2:
-    board: Raspberry Pi 5
-    host: 192.168.1.20
-    username: pi
-    password: raspberry
+    board: Raspberry Pi 3
+    host: 192.168.31.36
+    username: raspberrypi-2@
+    password: raspberrypi
 
 validation:
   layer1: true
