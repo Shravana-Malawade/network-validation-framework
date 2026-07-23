@@ -1,20 +1,27 @@
 """
 Main entry point for the Network Validation Framework.
 """
+
 from utils.config_loader import load_config
+from core.logger import setup_logger
 
 
 def main():
     """
-    Start the Network Validation Framework.
+    Main function of the framework.
     """
 
+    # Load configuration
     config = load_config()
 
-    print("Framework Name :", config["framework"]["name"])
-    print("Version        :", config["framework"]["version"])
-    print("Author         :", config["framework"]["author"])
-    print("Active Device  :", config["active_device"])
+    # Configure logger
+    logger = setup_logger(config)
+
+    # Test log messages
+    logger.info("Framework Started Successfully")
+    logger.info("Configuration Loaded Successfully")
+
+    print("Framework executed successfully.")
 
 
 if __name__ == "__main__":
