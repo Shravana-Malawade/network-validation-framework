@@ -55,3 +55,9 @@
 2026-07-24 09:46:20,980 | INFO | Executing command: hostname
 2026-07-24 09:46:21,102 | INFO | Command executed successfully: hostname
 2026-07-24 09:46:21,102 | INFO | SSH connection closed successfully.
+2026-07-24 09:52:03,753 | INFO | Framework Started Successfully
+2026-07-24 09:52:03,753 | INFO | Configuration Loaded Successfully
+2026-07-24 09:52:03,985 | INFO | SSH connection established successfully.
+2026-07-24 09:52:03,985 | INFO | Executing command: hostname
+2026-07-24 09:52:04,099 | INFO | Command executed successfully: hostname
+2026-07-24 09:52:04,101 | INFO | SSH connection closed successfully.
