@@ -61,3 +61,108 @@
 2026-07-24 09:52:03,985 | INFO | Executing command: hostname
 2026-07-24 09:52:04,099 | INFO | Command executed successfully: hostname
 2026-07-24 09:52:04,101 | INFO | SSH connection closed successfully.
+2026-07-27 13:04:18,780 | INFO | Framework Started Successfully
+2026-07-27 13:04:18,780 | INFO | Configuration Loaded Successfully
+2026-07-27 13:04:19,019 | INFO | SSH connection established successfully.
+2026-07-27 13:04:19,019 | INFO | Executing command: hostname
+2026-07-27 13:04:19,148 | INFO | Command executed successfully: hostname
+2026-07-27 13:04:19,150 | INFO | SSH connection closed successfully.
+2026-07-27 13:23:02,168 | INFO | Framework Started Successfully
+2026-07-27 13:23:02,168 | INFO | Configuration Loaded Successfully
+2026-07-27 13:23:02,383 | INFO | SSH connection established successfully.
+2026-07-27 13:23:02,384 | INFO | Executing command: hostname
+2026-07-27 13:23:02,505 | INFO | Command executed successfully: hostname
+2026-07-27 13:23:02,505 | INFO | SSH connection closed successfully.
+2026-07-28 05:54:55,292 | INFO | Framework Started Successfully
+2026-07-28 05:54:55,293 | INFO | Configuration Loaded Successfully
+2026-07-28 05:54:58,259 | ERROR | SSH connection failed: [Errno None] Unable to connect to port 22 on 192.168.31.35
+2026-07-28 05:54:58,260 | ERROR | Framework stopped because SSH connection failed.
+2026-07-28 05:55:05,394 | INFO | Framework Started Successfully
+2026-07-28 05:55:05,394 | INFO | Configuration Loaded Successfully
+2026-07-28 05:55:08,257 | ERROR | SSH connection failed: [Errno None] Unable to connect to port 22 on 192.168.31.35
+2026-07-28 05:55:08,257 | ERROR | Framework stopped because SSH connection failed.
+2026-07-28 05:56:56,851 | INFO | Framework Started Successfully
+2026-07-28 05:56:56,851 | INFO | Configuration Loaded Successfully
+2026-07-28 05:56:58,257 | ERROR | SSH connection failed: [Errno None] Unable to connect to port 22 on 192.168.31.35
+2026-07-28 05:56:58,257 | ERROR | Framework stopped because SSH connection failed.
+2026-07-28 05:58:23,071 | INFO | Framework Started Successfully
+2026-07-28 05:58:23,071 | INFO | Configuration Loaded Successfully
+2026-07-28 05:58:23,721 | INFO | SSH connection established successfully.
+2026-07-28 05:58:23,721 | INFO | Test execution started
+2026-07-28 05:58:23,724 | INFO | Executing test case: L1_TC_001
+2026-07-28 05:58:23,724 | INFO | Executing command: ip link
+2026-07-28 05:58:24,845 | INFO | Command executed successfully: ip link
+2026-07-28 05:58:24,845 | INFO | Test execution completed
+2026-07-28 05:58:24,846 | INFO | SSH connection closed successfully.
+2026-07-28 07:53:18,624 | INFO | Framework Started Successfully
+2026-07-28 07:53:18,624 | INFO | Configuration Loaded Successfully
+2026-07-28 07:53:18,827 | INFO | SSH connection established successfully.
+2026-07-28 07:53:18,827 | INFO | Test execution started
+2026-07-28 07:53:18,828 | INFO | Executing test case: L1_TC_001
+2026-07-28 07:53:18,828 | INFO | Executing command: ip link
+2026-07-28 07:53:18,952 | INFO | Command executed successfully: ip link
+2026-07-28 07:53:18,952 | INFO | Test execution completed
+2026-07-28 07:53:18,952 | INFO | SSH connection closed successfully.
+2026-07-28 07:59:07,406 | INFO | Framework Started Successfully
+2026-07-28 07:59:07,406 | INFO | Configuration Loaded Successfully
+2026-07-28 07:59:07,652 | INFO | SSH connection established successfully.
+2026-07-28 07:59:07,652 | INFO | Test execution started
+2026-07-28 07:59:07,653 | INFO | Executing test case: L1_TC_001
+2026-07-28 07:59:07,653 | INFO | Executing command: ip link
+2026-07-28 07:59:07,784 | INFO | Command executed successfully: ip link
+2026-07-28 07:59:07,784 | INFO | Test execution completed
+2026-07-28 07:59:07,785 | INFO | SSH connection closed successfully.
+2026-07-28 08:02:54,667 | INFO | Framework Started Successfully
+2026-07-28 08:02:54,667 | INFO | Configuration Loaded Successfully
+2026-07-28 08:02:54,896 | INFO | SSH connection established successfully.
+2026-07-28 08:02:54,896 | INFO | Test execution started
+2026-07-28 08:02:54,897 | INFO | Executing test case: L1_TC_001
+2026-07-28 08:02:54,897 | INFO | Executing command: ip link
+2026-07-28 08:02:55,012 | INFO | Command executed successfully: ip link
+2026-07-28 08:02:55,012 | INFO | Test execution completed
+2026-07-28 08:02:55,012 | INFO | SSH connection closed successfully.
+2026-07-28 08:28:41,010 | INFO | Framework Started Successfully
+2026-07-28 08:28:41,010 | INFO | Configuration Loaded Successfully
+2026-07-28 08:28:41,261 | INFO | SSH connection established successfully.
+2026-07-28 08:28:41,262 | INFO | Test execution started
+2026-07-28 08:28:41,267 | INFO | Executing test case: L1_TC_001
+2026-07-28 08:28:41,267 | INFO | Executing command: ip link
+2026-07-28 08:28:41,380 | INFO | Command executed successfully: ip link
+2026-07-28 08:28:41,380 | INFO | Test execution completed
+2026-07-28 08:28:41,381 | INFO | SSH connection closed successfully.
+2026-07-28 08:33:18,939 | INFO | Framework Started Successfully
+2026-07-28 08:33:18,939 | INFO | Configuration Loaded Successfully
+2026-07-28 08:33:19,179 | INFO | SSH connection established successfully.
+2026-07-28 08:33:19,179 | INFO | Test execution started
+2026-07-28 08:33:19,180 | INFO | Executing test case: L1_TC_001
+2026-07-28 08:33:19,180 | INFO | Executing command: ip link
+2026-07-28 08:33:19,313 | INFO | Command executed successfully: ip link
+2026-07-28 08:33:19,313 | INFO | Test execution completed
+2026-07-28 08:33:19,315 | INFO | SSH connection closed successfully.
+2026-07-28 10:23:27,274 | INFO | Framework Started Successfully
+2026-07-28 10:23:27,274 | INFO | Configuration Loaded Successfully
+2026-07-28 10:23:27,506 | INFO | SSH connection established successfully.
+2026-07-28 10:23:27,506 | INFO | Test execution started
+2026-07-28 10:23:27,510 | INFO | Executing test case: L1_TC_001
+2026-07-28 10:23:27,510 | INFO | Executing command: ip link
+2026-07-28 10:23:27,630 | INFO | Command executed successfully: ip link
+2026-07-28 10:23:27,631 | INFO | Test execution completed
+2026-07-28 10:23:27,635 | INFO | SSH connection closed successfully.
+2026-07-28 10:25:25,508 | INFO | Framework Started Successfully
+2026-07-28 10:25:25,508 | INFO | Configuration Loaded Successfully
+2026-07-28 10:25:25,712 | INFO | SSH connection established successfully.
+2026-07-28 10:25:25,712 | INFO | Test execution started
+2026-07-28 10:25:25,713 | INFO | Executing test case: L1_TC_001
+2026-07-28 10:25:25,713 | INFO | Executing command: ip link
+2026-07-28 10:25:25,852 | INFO | Command executed successfully: ip link
+2026-07-28 10:25:25,853 | INFO | Test execution completed
+2026-07-28 10:25:25,854 | INFO | SSH connection closed successfully.
+2026-07-28 10:29:39,047 | INFO | Framework Started Successfully
+2026-07-28 10:29:39,047 | INFO | Configuration Loaded Successfully
+2026-07-28 10:29:39,276 | INFO | SSH connection established successfully.
+2026-07-28 10:29:39,277 | INFO | Test execution started
+2026-07-28 10:29:39,277 | INFO | Executing test case: L1_TC_001
+2026-07-28 10:29:39,277 | INFO | Executing command: ip link
+2026-07-28 10:29:39,398 | INFO | Command executed successfully: ip link
+2026-07-28 10:29:39,399 | INFO | Test execution completed
+2026-07-28 10:29:39,401 | INFO | SSH connection closed successfully.

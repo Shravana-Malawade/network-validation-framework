@@ -1,0 +1,22 @@
+- test_case_id: L1_TC_001
+
+  category: layer1
+
+  module: interface
+
+  type: smoke
+
+  priority: high
+
+  description: Verify Ethernet interface detection.
+
+  preconditions:
+    dut_power: true
+    ssh_connected: true
+    ethernet_connected: true
+
+  command: ip link
+
+  expected:
+    interface:
+      state: UP
