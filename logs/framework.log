@@ -166,3 +166,12 @@
 2026-07-28 10:29:39,398 | INFO | Command executed successfully: ip link
 2026-07-28 10:29:39,399 | INFO | Test execution completed
 2026-07-28 10:29:39,401 | INFO | SSH connection closed successfully.
+2026-07-30 06:58:06,609 | INFO | Framework Started Successfully
+2026-07-30 06:58:06,610 | INFO | Configuration Loaded Successfully
+2026-07-30 06:58:06,850 | INFO | SSH connection established successfully.
+2026-07-30 06:58:06,850 | INFO | Test execution started
+2026-07-30 06:58:06,853 | INFO | Executing test case: L1_TC_001
+2026-07-30 06:58:06,853 | INFO | Executing command: ip link
+2026-07-30 06:58:06,973 | INFO | Command executed successfully: ip link
+2026-07-30 06:58:06,974 | INFO | Test execution completed
+2026-07-30 06:58:06,975 | INFO | SSH connection closed successfully.
