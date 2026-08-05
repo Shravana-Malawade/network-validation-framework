@@ -107,7 +107,9 @@ network-validation-framework
 - Jenkins Dashboard
 - Email Notification
 - Web Dashboard
+## Layer 2 Validation
 
+- Initial Layer 2 validation implementation.
 ---
 
 ## Author
