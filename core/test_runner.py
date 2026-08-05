@@ -10,6 +10,7 @@ import yaml
 from core.test_registry import TEST_REGISTRY
 
 
+
 def load_test_cases():
     """
     Load validation test cases from YAML file.
@@ -32,7 +33,7 @@ def load_test_cases():
 
 
 
-def run_tests(ssh, config, logger):
+def run_tests(ssh, config, logger, suite):
     """
     Execute validation test cases.
 
@@ -45,6 +46,9 @@ def run_tests(ssh, config, logger):
 
         logger:
             Logger object
+
+        suite:
+            Test suite to execute
 
     Returns:
         list:
@@ -63,6 +67,13 @@ def run_tests(ssh, config, logger):
     # Execute each test case
     for test_case in test_cases:
 
+
+        # Skip tests not belonging to selected suite
+        if suite != "all" and test_case["category"] != suite:
+
+            continue
+
+
         test_id = test_case["test_case_id"]
 
         logger.info(
@@ -70,15 +81,15 @@ def run_tests(ssh, config, logger):
         )
 
 
-        # Get module name from YAML
+        # Identify validation module
         module = test_case["module"]
 
 
-        # Check whether validation module exists
+        # Check if validation module exists
         if module in TEST_REGISTRY:
 
 
-            # Get corresponding validation function
+            # Get validation function from registry
             test_function = TEST_REGISTRY[module]
 
 

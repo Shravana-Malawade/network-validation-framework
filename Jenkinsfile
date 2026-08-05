@@ -2,6 +2,14 @@ pipeline {
 
     agent any
 
+    parameters {
+        choice(
+            name: 'TEST_SUITE',
+            choices: ['all', 'layer1'],
+            description: 'Select validation test suite to execute'
+        )
+    }
+
     stages {
 
         stage('Checkout') {
@@ -26,7 +34,7 @@ pipeline {
             steps {
                 sh '''
                     . .venv/bin/activate
-                    python3 main.py
+                    python3 main.py --suite ${TEST_SUITE}
                 '''
             }
         }

@@ -1,7 +1,8 @@
-
 """
 Main entry point for the Network Validation Framework.
 """
+
+import argparse
 
 from utils.config_loader import load_config
 from core.logger import setup_logger
@@ -9,20 +10,52 @@ from core.ssh import connect_ssh
 from core.test_runner import run_tests
 from core.reporter import generate_report
 
+
+def parse_arguments():
+    """
+    Parse command line arguments.
+
+    Returns:
+        argparse.Namespace:
+            User provided framework options.
+    """
+
+    parser = argparse.ArgumentParser(
+        description="Network Validation Framework"
+    )
+
+    parser.add_argument(
+        "--suite",
+        default="all",
+        help="Test suite to execute"
+    )
+
+    return parser.parse_args()
+
+
+
 def main():
     """
     Main function of the framework.
 
     Flow:
-        1. Load framework configuration
-        2. Setup logger
-        3. Connect to DUT through SSH
-        4. Execute validation test cases
-        5. Close SSH connection
+        1. Parse command line arguments
+        2. Load framework configuration
+        3. Setup logger
+        4. Connect to DUT through SSH
+        5. Execute validation test cases
+        6. Generate report
+        7. Close SSH connection
     """
+
+
+    # Read command line arguments
+    args = parse_arguments()
+
 
     # Load configuration from config.yaml
     config = load_config()
+
 
     # Initialize logger
     logger = setup_logger(config)
@@ -52,20 +85,26 @@ def main():
     results = run_tests(
         ssh,
         config,
-        logger
+        logger,
+        args.suite
     )
 
 
     # Display validation results
-    generate_report(results,config)
+    generate_report(
+        results,
+        config
+    )
 
 
     # Close SSH connection
     ssh.close()
 
+
     logger.info(
         "SSH connection closed successfully."
     )
+
 
     print(
         "Framework executed successfully."
