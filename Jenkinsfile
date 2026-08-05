@@ -32,10 +32,10 @@ pipeline {
 
         stage('Run Network Validation') {
             steps {
-                sh '''
+                sh """
                     . .venv/bin/activate
-                    python3 main.py --suite ${TEST_SUITE}
-                '''
+                    python3 main.py --suite ${params.TEST_SUITE}
+                """
             }
         }
     }
