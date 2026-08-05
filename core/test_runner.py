@@ -7,7 +7,7 @@ network validation tests.
 
 import yaml
 
-from validation.layer1.interface import validate_interface
+from core.test_registry import TEST_REGISTRY
 
 
 def load_test_cases():
@@ -31,9 +31,10 @@ def load_test_cases():
     return test_cases
 
 
+
 def run_tests(ssh, config, logger):
     """
-    Execute all validation test cases.
+    Execute validation test cases.
 
     Args:
         ssh:
@@ -54,44 +55,60 @@ def run_tests(ssh, config, logger):
 
     logger.info("Test execution started")
 
+
     # Load all test cases
     test_cases = load_test_cases()
+
 
     # Execute each test case
     for test_case in test_cases:
 
+        test_id = test_case["test_case_id"]
+
         logger.info(
-            f"Executing test case: {test_case['test_case_id']}"
+            f"Executing test case: {test_id}"
         )
 
-        # Identify validation module
+
+        # Get module name from YAML
         module = test_case["module"]
 
 
-        # Layer 1 interface validation
-        if module == "interface":
+        # Check whether validation module exists
+        if module in TEST_REGISTRY:
 
-            result = validate_interface(
+
+            # Get corresponding validation function
+            test_function = TEST_REGISTRY[module]
+
+
+            # Execute validation
+            result = test_function(
                 ssh,
                 test_case,
                 logger
             )
 
+
+            # Store result
             results.append(result)
 
 
-        # Unsupported validation module
         else:
 
+            # Module not implemented
             results.append(
                 {
-                    "test_case_id": test_case["test_case_id"],
+                    "test_case_id": test_id,
                     "status": "NOT_SUPPORTED",
                     "message": f"Module {module} is not implemented"
                 }
             )
 
 
-    logger.info("Test execution completed")
+    logger.info(
+        "Test execution completed"
+    )
+
 
     return results
