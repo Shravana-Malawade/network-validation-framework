@@ -1,0 +1,6 @@
+- test_case_id: L2_TC_001
+  category: layer2
+  module: arp
+  type: smoke
+  priority: high
+  description: Verify ARP resolution.

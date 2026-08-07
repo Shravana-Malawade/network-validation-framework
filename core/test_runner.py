@@ -5,31 +5,100 @@ Responsible for loading test cases and executing
 network validation tests.
 """
 
+
 import yaml
 
 from core.test_registry import TEST_REGISTRY
 
 
 
-def load_test_cases():
+def load_test_cases(suite):
     """
-    Load validation test cases from YAML file.
+    Load validation test cases from YAML files.
+
+    Args:
+        suite:
+            Selected validation suite.
 
     Returns:
         list:
-            List of test case dictionaries.
+            Combined list of test case dictionaries.
     """
 
-    # Path to layer1 test case file
-    test_file = "validation/layer1/test_cases.yaml"
+    test_cases = []
 
-    # Open YAML file and read contents
-    with open(test_file, "r") as file:
 
-        # Convert YAML data into Python objects
-        test_cases = yaml.safe_load(file)
+    # Execute all validation suites
+    if suite == "all":
+
+
+        suites = [
+
+            "layer1",
+            "layer2",
+            "layer3",
+            
+            "application"
+
+        ]
+
+
+        # Load test cases from every layer
+        for layer in suites:
+
+
+            test_file = (
+                f"validation/{layer}/test_cases.yaml"
+            )
+
+
+            try:
+
+
+                # Open YAML file
+                with open(test_file, "r") as file:
+
+
+                    # Convert YAML into Python objects
+                    cases = yaml.safe_load(file)
+
+
+                    # Add cases if available
+                    if cases:
+
+                        test_cases.extend(cases)
+
+
+
+            except FileNotFoundError:
+
+
+                # Skip layers that are not implemented yet
+                print(
+                    f"Skipping {layer}: test_cases.yaml not found"
+                )
+
+
+
+    else:
+
+
+        # Load selected suite only
+        test_file = (
+            f"validation/{suite}/test_cases.yaml"
+        )
+
+
+        with open(test_file, "r") as file:
+
+
+            test_cases = yaml.safe_load(file)
+
+
 
     return test_cases
+
+
 
 
 
@@ -39,58 +108,65 @@ def run_tests(ssh, config, logger, suite):
 
     Args:
         ssh:
-            Active SSH connection to DUT
+            Active SSH connection to DUT.
 
         config:
-            Framework configuration
+            Framework configuration.
 
         logger:
-            Logger object
+            Logger object.
 
         suite:
-            Test suite to execute
+            Validation suite selected.
 
     Returns:
         list:
-            Test execution results
+            Test execution results.
     """
+
 
     results = []
 
-    logger.info("Test execution started")
+
+    logger.info(
+        "Test execution started"
+    )
 
 
-    # Load all test cases
-    test_cases = load_test_cases()
+
+    # Load test cases
+    test_cases = load_test_cases(suite)
+
 
 
     # Execute each test case
     for test_case in test_cases:
 
 
-        # Skip tests not belonging to selected suite
-        if suite != "all" and test_case["category"] != suite:
-
-            continue
-
 
         test_id = test_case["test_case_id"]
+
+
 
         logger.info(
             f"Executing test case: {test_id}"
         )
 
 
-        # Identify validation module
+
+        # Get validation module name
         module = test_case["module"]
 
 
-        # Check if validation module exists
+
+        # Check whether module is registered
         if module in TEST_REGISTRY:
 
 
-            # Get validation function from registry
+
+            # Get validation function
             test_function = TEST_REGISTRY[module]
+
 
 
             # Execute validation
@@ -101,25 +177,38 @@ def run_tests(ssh, config, logger, suite):
             )
 
 
+
             # Store result
             results.append(result)
 
 
+
         else:
+
+
 
             # Module not implemented
             results.append(
+
                 {
+
                     "test_case_id": test_id,
+
                     "status": "NOT_SUPPORTED",
-                    "message": f"Module {module} is not implemented"
+
+                    "message":
+                    f"Module {module} is not implemented"
+
                 }
+
             )
+
 
 
     logger.info(
         "Test execution completed"
     )
+
 
 
     return results

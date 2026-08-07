@@ -1,0 +1,6 @@
+- test_case_id: L3_TC_001
+  category: layer3
+  type: smoke
+  priority: high
+  description: Verify IP address assignment.
+  module: ip
