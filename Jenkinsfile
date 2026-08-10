@@ -1,6 +1,10 @@
 pipeline {
-
     agent any
+
+    options {
+        skipDefaultCheckout(true)
+        timestamps()
+    }
 
     parameters {
         choice(
@@ -11,17 +15,16 @@ pipeline {
     }
 
     stages {
-
         stage('Checkout') {
             steps {
-                echo 'Repository checked out successfully.'
+                checkout scm
+                sh 'git log -1 --oneline'
             }
         }
 
         stage('Setup Python Environment') {
             steps {
                 sh '''
-                    rm -rf .venv
                     python3 -m venv .venv
                     . .venv/bin/activate
                     python -m pip install --upgrade pip
@@ -34,24 +37,29 @@ pipeline {
             steps {
                 sh """
                     . .venv/bin/activate
-                    python3 main.py --suite ${params.TEST_SUITE}
+                    python3 main.py --suite ${params.TEST_SUITE} > validation.log 2>&1
                 """
+            }
+        }
+
+        stage('Publish Build Output') {
+            steps {
+                echo 'Saving validation output and any generated reports.'
             }
         }
     }
 
     post {
+        always {
+            archiveArtifacts artifacts: 'validation.log, reports/**/*, report/**/*, *.html, *.xml', allowEmptyArchive: true
+        }
 
         success {
             echo 'Network Validation completed successfully.'
         }
 
         failure {
-            echo 'Network Validation failed.'
-        }
-
-        always {
-            echo 'Pipeline execution finished.'
+            echo 'Network Validation failed. Open validation.log under Build Artifacts for details.'
         }
     }
 }
