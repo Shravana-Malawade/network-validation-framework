@@ -48,10 +48,14 @@ cd /home/pi3/projects/network-validation-framework
 
 test -d .git
 branch="\$(git branch --show-current)"
+
 if [ "\$branch" != "feature/layer2-validation" ]; then
     echo "ERROR: Expected feature/layer2-validation, found \$branch"
     exit 2
 fi
+
+echo "Updating DUT repository from GitHub"
+git pull --ff-only origin "\$branch"
 
 echo "DUT: \$(hostname)"
 echo "Repository: \$(pwd)"
