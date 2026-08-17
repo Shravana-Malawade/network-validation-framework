@@ -12,3 +12,11 @@
   priority: high
   description: Verify MAC address.
   module: mac
+
+
+- test_case_id: L2_TC_003
+  category: layer2
+  module: statistics
+  type: smoke
+  priority: medium
+  description: Verify Ethernet interface RX/TX statistics.

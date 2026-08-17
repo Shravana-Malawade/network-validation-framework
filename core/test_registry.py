@@ -10,6 +10,7 @@ from validation.layer1.interface import validate_interface
 from validation.layer1.link import validate_link
 from validation.layer2.arp import validate_arp
 from validation.layer2.mac import validate_mac
+from validation.layer2.statistics import validate_statistics
 from validation.layer3.ip import validate_ip
 from validation.layer4.tcp import validate_tcp
 
@@ -24,9 +25,13 @@ TEST_REGISTRY = {
 
     "mac": validate_mac,
 
+    "statistics": validate_statistics,
+
     "ip": validate_ip,
 
     "tcp": validate_tcp
+
+    
 
 
 
