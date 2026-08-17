@@ -20,3 +20,36 @@
   expected:
     interface:
       state: UP
+
+
+- test_case_id: L1_TC_002
+
+  category: layer1
+
+  module: link
+
+  type: smoke
+
+  priority: high
+
+  description: Verify Ethernet physical link carrier.
+
+  preconditions:
+    dut_power: true
+    ssh_connected: true
+    ethernet_connected: true
+
+  command: |
+    for interface in /sys/class/net/*; do
+      name=${interface##*/}
+      [ "$name" = "lo" ] && continue
+      [ -d "$interface/wireless" ] && continue
+      [ -e "$interface/device" ] || continue
+      [ -f "$interface/carrier" ] || continue
+      [ "$(cat "$interface/operstate")" = "up" ] || continue
+      echo "$name:$(cat "$interface/carrier")"
+      break
+    done
+
+  expected:
+    carrier: 1
