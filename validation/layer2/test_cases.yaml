@@ -20,3 +20,12 @@
   type: smoke
   priority: medium
   description: Verify Ethernet interface RX/TX statistics.
+
+
+
+- test_case_id: L2_TC_004
+  category: layer2
+  module: ethernet
+  type: smoke
+  priority: medium
+  description: Verify Ethernet interface MTU.
