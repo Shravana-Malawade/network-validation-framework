@@ -6,6 +6,7 @@ the logger used throughout the Network Validation Framework.
 """
 
 import logging
+import os
 
 
 def setup_logger(config):
@@ -31,8 +32,18 @@ def setup_logger(config):
     # Set logger level
     logger.setLevel(log_level)
 
+    # Get log file path from configuration
+    log_path = logging_config["path"]
+
+    # Get the parent directory of the log file
+    log_directory = os.path.dirname(log_path)
+
+    # Create the log directory if it does not already exist
+    if log_directory:
+        os.makedirs(log_directory, exist_ok=True)
+
     # Create file handler
-    file_handler = logging.FileHandler(logging_config["path"])
+    file_handler = logging.FileHandler(log_path)
 
     # Create formatter
     formatter = logging.Formatter(
