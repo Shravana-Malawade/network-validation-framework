@@ -8,7 +8,7 @@ from utils.config_loader import load_config
 from core.logger import setup_logger
 from core.ssh import connect_ssh
 from core.test_runner import run_tests
-from core.reporter import generate_report
+from core.reporter import generate_report, generate_junit_report
 
 
 def parse_arguments():
@@ -33,7 +33,6 @@ def parse_arguments():
     return parser.parse_args()
 
 
-
 def main():
     """
     Main function of the framework.
@@ -44,18 +43,16 @@ def main():
         3. Setup logger
         4. Connect to DUT through SSH
         5. Execute validation test cases
-        6. Generate report
-        7. Close SSH connection
+        6. Generate console report
+        7. Generate JUnit XML report
+        8. Close SSH connection
     """
-
 
     # Read command line arguments
     args = parse_arguments()
 
-
     # Load configuration from config.yaml
     config = load_config()
-
 
     # Initialize logger
     logger = setup_logger(config)
@@ -63,13 +60,11 @@ def main():
     logger.info("Framework Started Successfully")
     logger.info("Configuration Loaded Successfully")
 
-
     # Establish SSH connection with DUT
     ssh = connect_ssh(
         config,
         logger
     )
-
 
     # Stop execution if SSH connection fails
     if ssh is None:
@@ -80,7 +75,6 @@ def main():
 
         return
 
-
     # Execute validation test cases
     results = run_tests(
         ssh,
@@ -89,22 +83,28 @@ def main():
         args.suite
     )
 
-
     # Display validation results
     generate_report(
         results,
         config
     )
 
+    # Generate JUnit XML report for Jenkins
+    junit_report = generate_junit_report(
+        results,
+        config
+    )
+
+    print(
+        f"JUnit report generated: {junit_report}"
+    )
 
     # Close SSH connection
     ssh.close()
 
-
     logger.info(
         "SSH connection closed successfully."
     )
-
 
     print(
         "Framework executed successfully."
