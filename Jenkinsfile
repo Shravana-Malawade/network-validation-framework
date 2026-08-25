@@ -22,6 +22,7 @@ pipeline {
     }
 
     stages {
+
         stage('Verify DUT Connection') {
             steps {
                 sshagent(credentials: [env.DUT_CREDENTIALS]) {
@@ -41,12 +42,15 @@ pipeline {
                         ssh -o BatchMode=yes -o StrictHostKeyChecking=yes \
                             "\$DUT_USER@\$DUT_HOST" \
                             "bash -s -- '${params.TEST_SUITE}'" <<'REMOTE_SCRIPT'
+
 set -Eeuo pipefail
 
 suite="\$1"
+
 cd /home/pi3/projects/network-validation-framework
 
 test -d .git
+
 branch="\$(git branch --show-current)"
 
 if [ "\$branch" != "feature/layer2-validation" ]; then
@@ -55,39 +59,75 @@ if [ "\$branch" != "feature/layer2-validation" ]; then
 fi
 
 echo "Updating DUT repository from GitHub"
+
 git pull --ff-only origin "\$branch"
 
 echo "DUT: \$(hostname)"
 echo "Repository: \$(pwd)"
 echo "Branch: \$branch"
+
 git log -1 --oneline
 git status --short
 
 python3 -m venv .venv
+
 . .venv/bin/activate
+
 python3 -m pip install --upgrade pip
+
 python3 -m pip install -r requirements.txt
 
+# Remove any previous JUnit report
+rm -f reports/junit/network-validation.xml
+
+# Execute selected validation suite
 python3 main.py --suite "\$suite" 2>&1 | tee validation.log
+
 REMOTE_SCRIPT
                     """
                 }
             }
         }
+
+        stage('Collect & Publish Test Results') {
+            steps {
+                sshagent(credentials: [env.DUT_CREDENTIALS]) {
+                    sh '''
+                        echo "Collecting JUnit test report from DUT"
+
+                        mkdir -p reports/junit
+
+                        scp -o BatchMode=yes -o StrictHostKeyChecking=yes \
+                            "$DUT_USER@$DUT_HOST:$DUT_REPO/reports/junit/network-validation.xml" \
+                            reports/junit/network-validation.xml
+                    '''
+                }
+
+                echo 'Publishing JUnit test results'
+
+                junit testResults: 'reports/junit/*.xml',
+                      allowEmptyResults: false
+            }
+        }
     }
 
     post {
+
         always {
             sshagent(credentials: [env.DUT_CREDENTIALS]) {
                 sh '''
+                    echo "Collecting validation log from DUT"
+
                     scp -o BatchMode=yes -o StrictHostKeyChecking=yes \
                         "$DUT_USER@$DUT_HOST:$DUT_REPO/validation.log" \
                         validation.log || true
                 '''
             }
 
-            archiveArtifacts artifacts: 'validation.log, reports/**, report/**, *.html, *.xml',
-                             allowEmptyArchive: true
+            archiveArtifacts(
+                artifacts: 'validation.log, reports/**, report/**, *.html, *.xml',
+                allowEmptyArchive: true
+            )
         }
 
         success {
