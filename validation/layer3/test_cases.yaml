@@ -4,3 +4,26 @@
   priority: high
   description: Verify IP address assignment.
   module: ip
+
+- test_case_id: L3_TC_002
+  category: layer3
+  type: smoke
+  priority: high
+  description: Verify default gateway configuration.
+  module: gateway
+
+
+- test_case_id: L3_TC_003
+  category: layer3
+  type: smoke
+  priority: high
+  description: Verify default gateway reachability.
+  module: ping
+
+
+- test_case_id: L3_TC_004
+  category: layer3
+  type: smoke
+  priority: high
+  description: Verify bidirectional peer DUT reachability.
+  module: peer_ping
