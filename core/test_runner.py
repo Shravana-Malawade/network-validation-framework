@@ -125,7 +125,7 @@ def run_tests(ssh, config, logger, suite):
 
             # Peer validation needs access to
             # full device configuration
-            if module == "peer_ping":
+            if module in ["peer_ping", "tcp"]:
 
                 result = test_function(
                     ssh,
