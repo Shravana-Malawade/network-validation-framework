@@ -5,3 +5,53 @@
   description: Verify TCP connection establishment between peer DUTs.
   module: tcp
   port: 22
+
+
+- test_case_id: L4_TC_002
+  category: layer4
+  type: functional
+  priority: high
+  description: Verify TCP payload transfer between peer DUTs.
+  module: tcp_payload
+  port: 5001
+
+
+
+- test_case_id: L4_TC_003
+  category: layer4
+  type: functional
+  priority: high
+  description: Verify UDP payload transfer between peer DUTs.
+  module: udp_payload
+  port: 5002
+
+
+- test_case_id: L4_TC_004
+  category: layer4
+  type: functional
+  priority: high
+  description: Verify bidirectional TCP payload transfer between peer DUTs.
+  module: tcp_bidirectional
+  forward_port: 5003
+  reverse_port: 5004
+
+
+- test_case_id: L4_TC_005
+  category: layer4
+  type: functional
+  priority: high
+  description: Verify bidirectional UDP payload transfer between peer DUTs.
+  module: udp_bidirectional
+  forward_port: 5005
+  reverse_port: 5006
+
+
+
+- test_case_id: L4_TC_006
+  category: layer4
+  type: performance
+  priority: high
+  description: Verify bidirectional TCP throughput between peer DUTs.
+  module: tcp_throughput
+  duration: 10
+  minimum_throughput_mbps: 200

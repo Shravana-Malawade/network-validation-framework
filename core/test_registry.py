@@ -5,7 +5,6 @@ Maintains mapping between test module names
 and validation functions.
 """
 
-
 from validation.layer1.interface import validate_interface
 from validation.layer1.link import validate_link
 
@@ -21,8 +20,21 @@ from validation.layer3.ping import (
     validate_peer_ping
 )
 
-from validation.layer4.tcp import validate_tcp
+from validation.layer4.tcp import (
+    validate_tcp,
+    validate_tcp_payload,
+    validate_tcp_bidirectional
+)
 
+from validation.layer4.udp import (
+    validate_udp_payload,
+    validate_udp_bidirectional
+)
+
+
+from validation.layer4.throughput import (
+    validate_tcp_throughput
+)
 
 TEST_REGISTRY = {
 
@@ -46,6 +58,16 @@ TEST_REGISTRY = {
 
     "peer_ping": validate_peer_ping,
 
-    "tcp": validate_tcp
+    "tcp": validate_tcp,
+
+    "tcp_payload": validate_tcp_payload,
+
+    "udp_payload": validate_udp_payload,
+
+    "tcp_bidirectional": validate_tcp_bidirectional,
+
+    "udp_bidirectional": validate_udp_bidirectional,
+
+    "tcp_throughput": validate_tcp_throughput,
 
 }

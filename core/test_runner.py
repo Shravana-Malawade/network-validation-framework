@@ -5,7 +5,6 @@ Responsible for loading test cases and executing
 network validation tests.
 """
 
-
 import yaml
 
 from core.test_registry import TEST_REGISTRY
@@ -33,6 +32,7 @@ def load_test_cases(suite):
             "layer1",
             "layer2",
             "layer3",
+            "layer4",
             "application"
         ]
 
@@ -58,7 +58,8 @@ def load_test_cases(suite):
 
                 # Skip layers that are not implemented yet
                 print(
-                    f"Skipping {layer}: test_cases.yaml not found"
+                    f"Skipping {layer}: "
+                    f"test_cases.yaml not found"
                 )
 
     else:
@@ -123,10 +124,19 @@ def run_tests(ssh, config, logger, suite):
             # Get validation function
             test_function = TEST_REGISTRY[module]
 
-            # Peer validation needs access to
-            # full device configuration
-            if module in ["peer_ping", "tcp"]:
+            # Tests below need access to
+            # complete device configuration
+            if module in [
+                "peer_ping",
+                "tcp",
+                "tcp_payload",
+                "udp_payload",
+                "tcp_bidirectional",
+                "udp_bidirectional",
+                "tcp_throughput"
 
+
+            ]:
                 result = test_function(
                     ssh,
                     test_case,
@@ -135,7 +145,6 @@ def run_tests(ssh, config, logger, suite):
                 )
 
             else:
-
                 result = test_function(
                     ssh,
                     test_case,
