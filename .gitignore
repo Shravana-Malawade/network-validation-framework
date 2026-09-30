@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+.venv/
+validation.log
+logs/
+reports/

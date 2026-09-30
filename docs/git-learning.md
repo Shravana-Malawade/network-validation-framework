@@ -285,3 +285,46 @@ Downloads the latest changes from GitHub.
 - Understood SSH authentication.
 - Connected local repository to GitHub.
 - Successfully pushed the Network Validation Framework.
+
+
+# Git Practical Implementation in Network Validation Framework
+
+Git and GitHub were practically used for version control of the Network Validation Framework.
+
+The following activities were performed:
+
+- Configured Git username and email.
+- Connected the local repository to the GitHub remote repository.
+- Used feature branches for development.
+- Used `git status` to check repository changes.
+- Used `git diff` to review modifications.
+- Used `git add` to stage changes.
+- Used `git commit` to maintain project history.
+- Used `git push` to upload changes to GitHub.
+- Used `git pull` to synchronize the local repository.
+- Used `git log` to review commit history.
+- Configured `.gitignore` for generated files, logs, reports, Python cache files, and the virtual environment.
+- Created Pull Requests for merging branch changes.
+- Practiced the reviewer and merge workflow using GitHub collaborators.
+
+## Git Workflow Followed
+
+Development Branch
+        ↓
+Modify Files
+        ↓
+git status / git diff
+        ↓
+git add
+        ↓
+git commit
+        ↓
+git push
+        ↓
+Create Pull Request
+        ↓
+Reviewer Review / Approval
+        ↓
+Merge into main
+
+This workflow was applied to the actual Network Validation Framework project.
