@@ -1,0 +1,22 @@
+- test_case_id: L2_TC_002
+  category: layer2
+  module: mac
+  type: smoke
+  priority: high
+  description: Verify Ethernet MAC address.
+
+
+- test_case_id: L2_TC_003
+  category: layer2
+  module: statistics
+  type: smoke
+  priority: medium
+  description: Verify Ethernet interface RX/TX statistics.
+
+
+- test_case_id: L2_TC_004
+  category: layer2
+  module: ethernet
+  type: smoke
+  priority: medium
+  description: Verify Ethernet interface MTU.
