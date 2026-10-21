@@ -12,21 +12,28 @@ from core.test_registry import TEST_REGISTRY
 
 def load_test_cases():
     """
-    Load validation test cases from YAML file.
+    Load Layer 1 and Layer 2 validation test cases.
 
     Returns:
         list:
-            List of test case dictionaries.
+            Combined list of test case dictionaries.
     """
 
-    # Path to layer1 test case file
-    test_file = "validation/layer1/test_cases.yaml"
+    test_files = [
+        "validation/layer1/test_cases.yaml",
+        "validation/layer2/test_cases.yaml"
+    ]
 
-    # Open YAML file and read contents
-    with open(test_file, "r") as file:
+    test_cases = []
 
-        # Convert YAML data into Python objects
-        test_cases = yaml.safe_load(file)
+    for test_file in test_files:
+
+        with open(test_file, "r") as file:
+
+            cases = yaml.safe_load(file)
+
+            if cases:
+                test_cases.extend(cases)
 
     return test_cases
 
