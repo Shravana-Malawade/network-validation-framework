@@ -21,7 +21,8 @@ def load_test_cases():
 
     test_files = [
         "validation/layer1/test_cases.yaml",
-        "validation/layer2/test_cases.yaml"
+        "validation/layer2/test_cases.yaml",
+        "validation/layer3/test_cases.yaml"
     ]
 
     test_cases = []
