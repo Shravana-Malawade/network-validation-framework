@@ -18,6 +18,9 @@ from validation.layer3.ip import validate_ip
 from validation.layer3.dhcp import validate_dhcp
 from validation.layer3.gateway import validate_gateway
 from validation.layer3.static_ip import validate_static_ip
+from validation.layer3.ipv6 import ( validate_ipv6_global,validate_ipv6_link_local)
+
+
 
 TEST_REGISTRY = {
 
@@ -44,4 +47,8 @@ TEST_REGISTRY = {
     "gateway": validate_gateway,
 
     "static_ip": validate_static_ip,
+
+    "ipv6_global": validate_ipv6_global,
+
+    "ipv6_link_local": validate_ipv6_link_local
 }
