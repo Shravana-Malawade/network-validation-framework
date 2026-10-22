@@ -20,3 +20,90 @@
   expected:
     interface:
       state: UP
+
+
+
+
+- test_case_id: L1_TC_002
+
+  category: layer1
+
+  module: link
+
+  type: smoke
+
+  priority: high
+
+  description: Verify physical Ethernet link detection.
+
+  preconditions:
+    dut_power: true
+    ssh_connected: true
+    ethernet_connected: true
+
+  expected:
+    carrier: 1
+
+
+
+
+- test_case_id: L1_TC_003
+
+  category: layer1
+
+  module: operstate
+
+  type: smoke
+
+  priority: high
+
+  description: Verify Ethernet interface operational state.
+
+  preconditions:
+    dut_power: true
+    ssh_connected: true
+    ethernet_connected: true
+
+  expected:
+    operstate: up
+
+- test_case_id: L1_TC_004
+
+  category: layer1
+
+  module: speed
+
+  type: smoke
+
+  priority: high
+
+  description: Verify Ethernet negotiated link speed.
+
+  preconditions:
+    dut_power: true
+    ssh_connected: true
+    ethernet_connected: true
+
+  expected:
+    speed: 1000
+
+
+- test_case_id: L1_TC_005
+
+  category: layer1
+
+  module: duplex
+
+  type: smoke
+
+  priority: high
+
+  description: Verify Ethernet duplex mode.
+
+  preconditions:
+    dut_power: true
+    ssh_connected: true
+    ethernet_connected: true
+
+  expected:
+    duplex: full
