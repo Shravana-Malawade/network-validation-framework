@@ -1,0 +1,83 @@
+- test_case_id: L3_TC_001
+
+  category: layer3
+
+  module: ip
+
+  type: smoke
+
+  priority: high
+
+  description: Verify IPv4 address assignment on Ethernet interface.
+
+  preconditions:
+    dut_power: true
+    ssh_connected: true
+    ethernet_connected: true
+
+  expected:
+    ipv4: assigned
+
+
+- test_case_id: L3_TC_002
+
+  category: layer3
+
+  module: dhcp
+
+  type: smoke
+
+  priority: high
+
+  description: Verify IPv4 address is assigned dynamically through DHCP.
+
+  preconditions:
+    dut_power: true
+    ssh_connected: true
+    ethernet_connected: true
+
+  expected:
+    assignment: dynamic
+
+
+- test_case_id: L3_TC_003
+
+  category: layer3
+
+  module: gateway
+
+  type: smoke
+
+  priority: high
+
+  description: Verify default gateway configuration.
+
+  preconditions:
+    dut_power: true
+    ssh_connected: true
+    ethernet_connected: true
+
+  expected:
+    gateway: present
+
+
+- test_case_id: L3_TC_004
+
+  category: layer3
+
+  module: static_ip
+
+  type: functional
+
+  priority: high
+
+  description: Verify temporary static IPv4 address configuration.
+
+  preconditions:
+    dut_power: true
+    ssh_connected: true
+    ethernet_connected: true
+    sudo_non_interactive: true
+
+  expected:
+    static_ip: 192.0.2.10/32
