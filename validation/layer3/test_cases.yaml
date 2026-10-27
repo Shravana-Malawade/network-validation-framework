@@ -81,3 +81,67 @@
 
   expected:
     static_ip: 192.0.2.10/32
+
+
+
+- test_case_id: L3_TC_005
+
+  category: layer3
+
+  module: ip
+
+  type: smoke
+
+  priority: high
+
+  description: Verify global IPv4 address on Ethernet interface.
+
+  preconditions:
+    dut_power: true
+    ssh_connected: true
+    ethernet_connected: true
+
+  expected:
+    ipv4: present
+
+
+- test_case_id: L3_TC_006
+
+  category: layer3
+
+  module: ipv6_global
+
+  type: smoke
+
+  priority: high
+
+  description: Verify global IPv6 address on Ethernet interface.
+
+  preconditions:
+    dut_power: true
+    ssh_connected: true
+    ethernet_connected: true
+
+  expected:
+    ipv6_global: present
+
+
+- test_case_id: L3_TC_007
+
+  category: layer3
+
+  module: ipv6_link_local
+
+  type: smoke
+
+  priority: high
+
+  description: Verify IPv6 link-local address on Ethernet interface.
+
+  preconditions:
+    dut_power: true
+    ssh_connected: true
+    ethernet_connected: true
+
+  expected:
+    ipv6_link_local: present
