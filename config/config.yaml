@@ -9,7 +9,7 @@ active_device: device1
 devices:
   device1:
     board: Raspberry Pi 3 
-    host: 192.168.31.35
+    host: 192.168.1.24
     username: pi3
     password: raspberrypi
 

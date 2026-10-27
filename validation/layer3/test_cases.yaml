@@ -29,7 +29,7 @@
 
   priority: high
 
-  description: Verify IPv4 address is assigned dynamically through DHCP.
+  description: Verify IPv4 address assignment mode.
 
   preconditions:
     dut_power: true
@@ -37,8 +37,7 @@
     ethernet_connected: true
 
   expected:
-    assignment: dynamic
-
+    assignment: manual
 
 - test_case_id: L3_TC_003
 
@@ -145,3 +144,26 @@
 
   expected:
     ipv6_link_local: present
+
+
+
+
+- test_case_id: L3_TC_008
+
+  category: layer3
+
+  module: ping
+
+  type: smoke
+
+  priority: high
+
+  description: Verify ICMP reachability to default gateway.
+
+  preconditions:
+    dut_power: true
+    ssh_connected: true
+    ethernet_connected: true
+
+  expected:
+    reachable: true

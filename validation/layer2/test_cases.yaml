@@ -20,3 +20,25 @@
   type: smoke
   priority: medium
   description: Verify Ethernet interface MTU.
+
+
+
+- test_case_id: L2_TC_001
+
+  category: layer2
+
+  module: arp
+
+  type: smoke
+
+  priority: high
+
+  description: Verify ARP resolution for the default gateway.
+
+  preconditions:
+    dut_power: true
+    ssh_connected: true
+    ethernet_connected: true
+
+  expected:
+    arp_resolution: successful

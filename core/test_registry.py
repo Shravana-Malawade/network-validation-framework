@@ -13,12 +13,14 @@ from validation.layer1.duplex import validate_duplex
 from validation.layer2.mac import validate_mac
 from validation.layer2.statistics import validate_statistics
 from validation.layer2.ethernet import validate_ethernet
+from validation.layer2.arp import validate_arp
 
 from validation.layer3.ip import validate_ip
 from validation.layer3.dhcp import validate_dhcp
 from validation.layer3.gateway import validate_gateway
 from validation.layer3.static_ip import validate_static_ip
 from validation.layer3.ipv6 import ( validate_ipv6_global,validate_ipv6_link_local)
+from validation.layer3.ping import validate_ping
 
 
 
@@ -40,6 +42,8 @@ TEST_REGISTRY = {
 
     "ethernet": validate_ethernet,
 
+    "arp": validate_arp,
+
     "ip": validate_ip,
 
     "dhcp": validate_dhcp,
@@ -50,5 +54,7 @@ TEST_REGISTRY = {
 
     "ipv6_global": validate_ipv6_global,
 
-    "ipv6_link_local": validate_ipv6_link_local
+    "ipv6_link_local": validate_ipv6_link_local,
+    
+    "ping": validate_ping,
 }
