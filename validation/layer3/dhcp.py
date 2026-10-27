@@ -1,17 +1,18 @@
 """
-DHCP Validation Module
+IP Assignment Mode Validation Module
 
-Validates dynamic IPv4 address assignment
-on the Device Under Test.
+Validates whether IPv4 configuration is using
+DHCP or manual/static addressing.
 """
 
 
 def validate_dhcp(ssh, test_case, logger):
     """
-    Verify IPv4 address is dynamically assigned through DHCP.
+    Validate IPv4 assignment method against the
+    expected method defined in the test case.
     """
 
-    logger.info("Starting DHCP validation")
+    logger.info("Starting IPv4 assignment mode validation")
 
     # Detect active Ethernet interface
     stdin, stdout, stderr = ssh.exec_command(
@@ -31,16 +32,16 @@ def validate_dhcp(ssh, test_case, logger):
             "remarks": "Network interface not found"
         }
 
-    # Read IPv4 address information
+    logger.info(f"Detected Interface : {interface}")
+
+    # Find active NetworkManager connection
     stdin, stdout, stderr = ssh.exec_command(
-        f"ip -4 -o addr show dev {interface} scope global"
+        f"nmcli -g GENERAL.CONNECTION device show {interface}"
     )
 
-    output = stdout.read().decode().strip()
+    connection = stdout.read().decode().strip()
 
-    logger.info(f"IPv4 Configuration : {output}")
-
-    if output == "":
+    if connection == "":
         return {
             "test_case_id": test_case["test_case_id"],
             "category": test_case["category"],
@@ -48,10 +49,37 @@ def validate_dhcp(ssh, test_case, logger):
             "priority": test_case["priority"],
             "description": test_case["description"],
             "status": "FAIL",
-            "remarks": "IPv4 address not assigned"
+            "remarks": "Active network connection not found"
         }
 
-    if " dynamic " in f" {output} ":
+    logger.info(f"Connection : {connection}")
+
+    # Read IPv4 assignment method
+    stdin, stdout, stderr = ssh.exec_command(
+        f'nmcli -g ipv4.method connection show "{connection}"'
+    )
+
+    method = stdout.read().decode().strip()
+
+    logger.info(f"IPv4 Method : {method}")
+
+    # NetworkManager uses:
+    # auto   = DHCP
+    # manual = Static
+    if method == "auto":
+        detected_assignment = "dynamic"
+    elif method == "manual":
+        detected_assignment = "manual"
+    else:
+        detected_assignment = method
+
+    expected_assignment = (
+        test_case
+        .get("expected", {})
+        .get("assignment", "")
+    )
+
+    if detected_assignment == expected_assignment:
         return {
             "test_case_id": test_case["test_case_id"],
             "category": test_case["category"],
@@ -60,7 +88,8 @@ def validate_dhcp(ssh, test_case, logger):
             "description": test_case["description"],
             "status": "PASS",
             "remarks":
-                f"DHCP/dynamic IPv4 address detected on interface: {interface}"
+                f"IPv4 assignment mode verified as "
+                f"{detected_assignment} on interface: {interface}"
         }
 
     return {
@@ -71,5 +100,6 @@ def validate_dhcp(ssh, test_case, logger):
         "description": test_case["description"],
         "status": "FAIL",
         "remarks":
-            f"IPv4 address exists but is not marked dynamic on interface: {interface}"
+            f"IPv4 assignment mode is {detected_assignment}, "
+            f"expected {expected_assignment}"
     }
