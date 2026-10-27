@@ -15,9 +15,9 @@ devices:
 
   device2:
     board: Raspberry Pi 3
-    host: 192.168.31.36
-    username: raspberrypi-2@
-    password: raspberrypi
+    host: 192.168.1.29
+    username: pi3
+    password: raspberry
 
 validation:
   layer1: true

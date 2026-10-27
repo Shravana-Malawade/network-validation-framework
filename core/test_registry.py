@@ -19,9 +19,16 @@ from validation.layer3.ip import validate_ip
 from validation.layer3.dhcp import validate_dhcp
 from validation.layer3.gateway import validate_gateway
 from validation.layer3.static_ip import validate_static_ip
-from validation.layer3.ipv6 import ( validate_ipv6_global,validate_ipv6_link_local)
+from validation.layer3.ipv6 import (
+    validate_ipv6_global,
+    validate_ipv6_link_local
+)
 from validation.layer3.ping import validate_ping
 
+from validation.layer4.tcp import (
+    validate_tcp_connection,
+    validate_tcp_payload
+)
 
 
 TEST_REGISTRY = {
@@ -55,6 +62,17 @@ TEST_REGISTRY = {
     "ipv6_global": validate_ipv6_global,
 
     "ipv6_link_local": validate_ipv6_link_local,
-    
+
     "ping": validate_ping,
+
+    "tcp_connection": validate_tcp_connection,
+
+    "tcp_payload": validate_tcp_payload,
+}
+
+
+# These modules require access to the
+# complete framework configuration.
+CONFIG_AWARE_MODULES = {
+    "tcp_payload"
 }

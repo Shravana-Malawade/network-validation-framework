@@ -7,12 +7,15 @@ network validation tests.
 
 import yaml
 
-from core.test_registry import TEST_REGISTRY
+from core.test_registry import (
+    TEST_REGISTRY,
+    CONFIG_AWARE_MODULES
+)
 
 
 def load_test_cases():
     """
-    Load Layer 1 and Layer 2 validation test cases.
+    Load validation test cases.
 
     Returns:
         list:
@@ -22,7 +25,8 @@ def load_test_cases():
     test_files = [
         "validation/layer1/test_cases.yaml",
         "validation/layer2/test_cases.yaml",
-        "validation/layer3/test_cases.yaml"
+        "validation/layer3/test_cases.yaml",
+        "validation/layer4/test_cases.yaml"
     ]
 
     test_cases = []
@@ -37,7 +41,6 @@ def load_test_cases():
                 test_cases.extend(cases)
 
     return test_cases
-
 
 
 def run_tests(ssh, config, logger):
@@ -63,10 +66,8 @@ def run_tests(ssh, config, logger):
 
     logger.info("Test execution started")
 
-
     # Load all test cases
     test_cases = load_test_cases()
-
 
     # Execute each test case
     for test_case in test_cases:
@@ -77,30 +78,36 @@ def run_tests(ssh, config, logger):
             f"Executing test case: {test_id}"
         )
 
-
         # Get module name from YAML
         module = test_case["module"]
-
 
         # Check whether validation module exists
         if module in TEST_REGISTRY:
 
-
             # Get corresponding validation function
             test_function = TEST_REGISTRY[module]
 
+            # Some tests need complete configuration
+            # so they can access both DUT and peer.
+            if module in CONFIG_AWARE_MODULES:
 
-            # Execute validation
-            result = test_function(
-                ssh,
-                test_case,
-                logger
-            )
+                result = test_function(
+                    ssh,
+                    test_case,
+                    logger,
+                    config
+                )
 
+            else:
+
+                result = test_function(
+                    ssh,
+                    test_case,
+                    logger
+                )
 
             # Store result
             results.append(result)
-
 
         else:
 
@@ -109,14 +116,13 @@ def run_tests(ssh, config, logger):
                 {
                     "test_case_id": test_id,
                     "status": "NOT_SUPPORTED",
-                    "message": f"Module {module} is not implemented"
+                    "message":
+                        f"Module {module} is not implemented"
                 }
             )
-
 
     logger.info(
         "Test execution completed"
     )
-
 
     return results

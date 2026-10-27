@@ -1,0 +1,17 @@
+- test_case_id: L4_TC_001
+
+  category: layer4
+
+  module: tcp_connection
+
+  type: smoke
+
+  priority: high
+
+  description: Verify TCP connection to DUT SSH service.
+
+  target:
+    port: 22
+
+  expected:
+    connection: successful

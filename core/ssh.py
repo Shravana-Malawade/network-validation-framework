@@ -1,47 +1,31 @@
 """
 SSH Connection Module
 
-This module is responsible for establishing and managing
-SSH connections to the Device Under Test (DUT).
+Establishes and manages SSH connections
+to validation devices.
 """
 
 import paramiko
 
 
-def connect_ssh(config, logger):
+def connect_device(config, device_name, logger):
     """
-    Establish an SSH connection to the active device.
-
-    Args:
-        config (dict): Configuration dictionary loaded from config.yaml.
-        logger (logging.Logger): Logger object used for logging messages.
-
-    Returns:
-        paramiko.SSHClient: Connected SSH client object.
-        None: If the connection fails.
+    Establish SSH connection to a specific configured device.
     """
 
-    # Get the active device name
-    active_device = config["active_device"]
+    device = config["devices"][device_name]
 
-    # Read the active device configuration
-    device = config["devices"][active_device]
-
-    # Extract SSH credentials
     host = device["host"]
     username = device["username"]
     password = device["password"]
 
-    # Create SSH client object
     ssh_client = paramiko.SSHClient()
 
     try:
-        # Automatically accept unknown host keys
         ssh_client.set_missing_host_key_policy(
             paramiko.AutoAddPolicy()
         )
 
-        # Establish SSH connection
         ssh_client.connect(
             hostname=host,
             username=username,
@@ -49,11 +33,33 @@ def connect_ssh(config, logger):
             timeout=10
         )
 
-        logger.info("SSH connection established successfully.")
+        logger.info(
+            f"SSH connection established to "
+            f"{device_name} ({host})"
+        )
 
         return ssh_client
 
     except Exception as error:
-        logger.error(f"SSH connection failed: {error}")
+        logger.error(
+            f"SSH connection failed to "
+            f"{device_name} ({host}): {error}"
+        )
 
         return None
+
+
+def connect_ssh(config, logger):
+    """
+    Connect to the configured active DUT.
+
+    This keeps the existing framework behavior unchanged.
+    """
+
+    active_device = config["active_device"]
+
+    return connect_device(
+        config,
+        active_device,
+        logger
+    )
