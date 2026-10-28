@@ -15,3 +15,19 @@
 
   expected:
     connection: successful
+
+
+- test_case_id: L4_TC_002
+  category: layer4
+  module: tcp_payload
+  type: functional
+  priority: high
+  description: Verify TCP payload transfer between requester and responder.
+
+  target:
+    peer_device: device2
+    port: 5001
+    payload: NETWORK_VALIDATION_TCP
+
+  expected:
+    payload_match: true
