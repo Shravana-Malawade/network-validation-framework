@@ -30,6 +30,10 @@ from validation.layer4.tcp import (
     validate_tcp_payload
 )
 
+from validation.layer4.udp import validate_udp_payload
+
+
+
 
 TEST_REGISTRY = {
 
@@ -68,11 +72,15 @@ TEST_REGISTRY = {
     "tcp_connection": validate_tcp_connection,
 
     "tcp_payload": validate_tcp_payload,
+
+    "udp_payload": validate_udp_payload,
+
 }
 
 
 # These modules require access to the
 # complete framework configuration.
 CONFIG_AWARE_MODULES = {
-    "tcp_payload"
+    "tcp_payload",
+    "udp_payload"
 }
