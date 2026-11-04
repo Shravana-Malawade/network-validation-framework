@@ -32,7 +32,10 @@ from validation.layer4.tcp import (
     validate_tcp_bidirectional
 )
 
-from validation.layer4.udp import validate_udp_payload
+from validation.layer4.udp import (
+    validate_udp_payload,
+    validate_udp_bidirectional
+)
 
 
 TEST_REGISTRY = {
@@ -59,6 +62,7 @@ TEST_REGISTRY = {
     "tcp_payload": validate_tcp_payload,
     "udp_payload": validate_udp_payload,
     "tcp_bidirectional": validate_tcp_bidirectional,
+    "udp_bidirectional": validate_udp_bidirectional,
 }
 
 
@@ -67,5 +71,6 @@ TEST_REGISTRY = {
 CONFIG_AWARE_MODULES = {
     "tcp_payload",
     "udp_payload",
-    "tcp_bidirectional"
+    "tcp_bidirectional",
+    "udp_bidirectional"
 }
