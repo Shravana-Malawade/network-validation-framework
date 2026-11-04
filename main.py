@@ -1,7 +1,5 @@
 
-"""
-Main entry point for the Network Validation Framework.
-"""
+import sys
 
 from utils.config_loader import load_config
 from core.logger import setup_logger
@@ -9,67 +7,41 @@ from core.ssh import connect_ssh
 from core.test_runner import run_tests
 from core.reporter import generate_report
 
+
 def main():
-    """
-    Main function of the framework.
-
-    Flow:
-        1. Load framework configuration
-        2. Setup logger
-        3. Connect to DUT through SSH
-        4. Execute validation test cases
-        5. Close SSH connection
-    """
-
-    # Load configuration from config.yaml
     config = load_config()
-
-    # Initialize logger
     logger = setup_logger(config)
+
+    selected_test_id = sys.argv[1] if len(sys.argv) > 1 else None
 
     logger.info("Framework Started Successfully")
     logger.info("Configuration Loaded Successfully")
 
+    if selected_test_id:
+        logger.info(f"Selected test case: {selected_test_id}")
 
-    # Establish SSH connection with DUT
-    ssh = connect_ssh(
-        config,
-        logger
-    )
+    ssh = connect_ssh(config, logger)
 
-
-    # Stop execution if SSH connection fails
     if ssh is None:
-
-        logger.error(
-            "Framework stopped because SSH connection failed."
-        )
-
+        logger.error("Framework stopped because SSH connection failed.")
         return
 
-
-    # Execute validation test cases
     results = run_tests(
-        ssh,
-        config,
-        logger
+        ssh, config, logger, selected_test_id
     )
 
+    if selected_test_id and not results:
+        logger.error(f"No results found for test case: {selected_test_id}")
+        ssh.close()
+        return
 
-    # Display validation results
-    generate_report(results,config)
+    generate_report(results, config)
 
-
-    # Close SSH connection
     ssh.close()
 
-    logger.info(
-        "SSH connection closed successfully."
-    )
+    logger.info("SSH connection closed successfully.")
 
-    print(
-        "Framework executed successfully."
-    )
+    print("Framework executed successfully.")
 
 
 if __name__ == "__main__":

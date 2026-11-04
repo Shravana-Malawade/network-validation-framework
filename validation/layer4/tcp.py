@@ -1,3 +1,4 @@
+
 """
 TCP Validation Module
 
@@ -32,11 +33,9 @@ def validate_tcp_connection(ssh, test_case, logger):
             "remarks": "SSH transport is not active"
         }
 
-    # Obtain DUT IP from the active SSH connection
     peer = transport.getpeername()
     dut_host = peer[0]
 
-    # Read TCP port from YAML
     port = test_case.get(
         "target", {}
     ).get(
@@ -48,7 +47,6 @@ def validate_tcp_connection(ssh, test_case, logger):
 
     try:
 
-        # Create a new independent TCP connection
         tcp_socket = socket.create_connection(
             (dut_host, int(port)),
             timeout=5
@@ -87,19 +85,16 @@ def validate_tcp_payload(ssh, test_case, logger, config):
     """
     Validate TCP payload transfer between requester and responder.
 
-    Requester / peer device sends a TCP payload to the DUT.
-    The DUT receives the payload and echoes the same payload back.
-    The requester verifies that the returned payload matches.
+    Peer device sends a TCP payload to the DUT.
+    DUT receives the payload and echoes it back.
+    Peer verifies that the returned payload matches.
     """
 
     logger.info("Starting TCP payload validation")
 
-    # Read test parameters from YAML
     target = test_case.get("target", {})
 
-    port = int(
-        target.get("port", 5001)
-    )
+    port = int(target.get("port", 5001))
 
     peer_device = target.get(
         "peer_device",
@@ -111,30 +106,17 @@ def validate_tcp_payload(ssh, test_case, logger, config):
         "NETWORK_VALIDATION_TCP"
     )
 
-    # Get active DUT
     active_device = config["active_device"]
 
     dut_host = config["devices"][active_device]["host"]
 
     peer_host = config["devices"][peer_device]["host"]
 
-    logger.info(
-        f"DUT / Responder : {dut_host}"
-    )
+    logger.info(f"DUT / Responder : {dut_host}")
+    logger.info(f"Peer / Requester : {peer_host}")
+    logger.info(f"TCP Port : {port}")
+    logger.info(f"Payload : {payload}")
 
-    logger.info(
-        f"Peer / Requester : {peer_host}"
-    )
-
-    logger.info(
-        f"TCP Port : {port}"
-    )
-
-    logger.info(
-        f"Payload : {payload}"
-    )
-
-    # Connect to peer/requester device
     peer_ssh = connect_device(
         config,
         peer_device,
@@ -157,9 +139,7 @@ def validate_tcp_payload(ssh, test_case, logger, config):
 
     try:
 
-        # -------------------------------------------------
-        # Start TCP echo server on DUT / responder
-        # -------------------------------------------------
+        # Start TCP echo server on DUT.
 
         server_code = (
             "import socket;"
@@ -184,24 +164,17 @@ def validate_tcp_payload(ssh, test_case, logger, config):
             + shlex.quote(server_code)
         )
 
-        logger.info(
-            "Starting TCP server on DUT"
-        )
+        logger.info("Starting TCP server on DUT")
 
         (
             server_stdin,
             server_stdout,
             server_stderr
-        ) = ssh.exec_command(
-            server_command
-        )
+        ) = ssh.exec_command(server_command)
 
-        # Allow time for server to start listening
         time.sleep(1)
 
-        # -------------------------------------------------
-        # Run TCP client on peer / requester
-        # -------------------------------------------------
+        # Run TCP client on peer device.
 
         payload_bytes = payload.encode("utf-8")
 
@@ -231,59 +204,34 @@ def validate_tcp_payload(ssh, test_case, logger, config):
             client_stdin,
             client_stdout,
             client_stderr
-        ) = peer_ssh.exec_command(
-            client_command
-        )
+        ) = peer_ssh.exec_command(client_command)
 
-        # Wait for client execution to complete
         client_status = (
             client_stdout.channel.recv_exit_status()
         )
 
         client_output = (
-            client_stdout
-            .read()
-            .decode()
-            .strip()
+            client_stdout.read().decode().strip()
         )
 
         client_error = (
-            client_stderr
-            .read()
-            .decode()
-            .strip()
+            client_stderr.read().decode().strip()
         )
 
-        # Wait for server execution to complete
         server_status = (
             server_stdout.channel.recv_exit_status()
         )
 
         server_output = (
-            server_stdout
-            .read()
-            .decode()
-            .strip()
+            server_stdout.read().decode().strip()
         )
 
         server_error = (
-            server_stderr
-            .read()
-            .decode()
-            .strip()
+            server_stderr.read().decode().strip()
         )
 
-        logger.info(
-            f"TCP client output: {client_output}"
-        )
-
-        logger.info(
-            f"TCP server output: {server_output}"
-        )
-
-        # -------------------------------------------------
-        # Validate TCP payload
-        # -------------------------------------------------
+        logger.info(f"TCP client output: {client_output}")
+        logger.info(f"TCP server output: {server_output}")
 
         if (
             client_status == 0
@@ -293,34 +241,18 @@ def validate_tcp_payload(ssh, test_case, logger, config):
         ):
 
             return {
-                "test_case_id":
-                    test_case["test_case_id"],
-
-                "category":
-                    test_case["category"],
-
-                "type":
-                    test_case["type"],
-
-                "priority":
-                    test_case["priority"],
-
-                "description":
-                    test_case["description"],
-
-                "status":
-                    "PASS",
-
+                "test_case_id": test_case["test_case_id"],
+                "category": test_case["category"],
+                "type": test_case["type"],
+                "priority": test_case["priority"],
+                "description": test_case["description"],
+                "status": "PASS",
                 "remarks":
                     f"TCP payload transfer successful: "
                     f"{peer_host} -> "
                     f"{dut_host}:{port}; "
                     f"payload echoed correctly"
             }
-
-        # -------------------------------------------------
-        # Failure handling
-        # -------------------------------------------------
 
         error_message = (
             client_error
@@ -331,24 +263,12 @@ def validate_tcp_payload(ssh, test_case, logger, config):
         )
 
         return {
-            "test_case_id":
-                test_case["test_case_id"],
-
-            "category":
-                test_case["category"],
-
-            "type":
-                test_case["type"],
-
-            "priority":
-                test_case["priority"],
-
-            "description":
-                test_case["description"],
-
-            "status":
-                "FAIL",
-
+            "test_case_id": test_case["test_case_id"],
+            "category": test_case["category"],
+            "type": test_case["type"],
+            "priority": test_case["priority"],
+            "description": test_case["description"],
+            "status": "FAIL",
             "remarks":
                 f"TCP payload validation failed: "
                 f"{error_message}"
@@ -361,33 +281,438 @@ def validate_tcp_payload(ssh, test_case, logger, config):
         )
 
         return {
-            "test_case_id":
-                test_case["test_case_id"],
-
-            "category":
-                test_case["category"],
-
-            "type":
-                test_case["type"],
-
-            "priority":
-                test_case["priority"],
-
-            "description":
-                test_case["description"],
-
-            "status":
-                "FAIL",
-
+            "test_case_id": test_case["test_case_id"],
+            "category": test_case["category"],
+            "type": test_case["type"],
+            "priority": test_case["priority"],
+            "description": test_case["description"],
+            "status": "FAIL",
             "remarks":
-                f"TCP payload validation failed: "
-                f"{error}"
+                f"TCP payload validation failed: {error}"
         }
 
     finally:
 
         peer_ssh.close()
 
+        logger.info("Peer SSH connection closed")
+
+
+def validate_tcp_bidirectional(ssh, test_case, logger, config):
+    """
+    Validate bidirectional TCP communication.
+
+    Peer sends its own payload to DUT.
+    DUT sends a different payload back to peer.
+    Both devices verify the received payload.
+    """
+
+    logger.info(
+        "Starting bidirectional TCP validation"
+    )
+
+    peer_ssh = None
+
+    # Build a result using the framework's existing format.
+    def make_result(status, remarks):
+
+        return {
+            "test_case_id": test_case.get(
+                "test_case_id",
+                test_case.get("id")
+            ),
+            "category": test_case.get(
+                "category",
+                test_case.get("layer", "L4")
+            ),
+            "type": test_case.get("type"),
+            "priority": test_case.get("priority"),
+            "description": test_case.get("description"),
+            "status": status,
+            "remarks": remarks
+        }
+
+    try:
+
+        # Read test configuration.
+
+        target = test_case.get("target", {})
+        parameters = test_case.get("parameters", {})
+
+        port = int(target["port"])
+        peer_device = target["peer_device"]
+
+        dut_payload = str(
+            parameters["dut_payload"]
+        ).encode("utf-8")
+
+        peer_payload = str(
+            parameters["peer_payload"]
+        ).encode("utf-8")
+
+        active_device = config["active_device"]
+
+        dut_host = config["devices"][active_device]["host"]
+
+        peer_host = config["devices"][peer_device]["host"]
+
+        logger.info(f"DUT Host : {dut_host}")
+        logger.info(f"Peer Host : {peer_host}")
+        logger.info(f"TCP Port : {port}")
+
         logger.info(
-            "Peer SSH connection closed"
+            f"DUT Payload : {dut_payload.decode()}"
         )
+
+        logger.info(
+            f"Peer Payload : {peer_payload.decode()}"
+        )
+
+        # Connect to peer device.
+
+        peer_ssh = connect_device(
+            config,
+            peer_device,
+            logger
+        )
+
+        if peer_ssh is None:
+
+            return make_result(
+                "FAIL",
+                "Unable to establish SSH connection "
+                "to peer device"
+            )
+
+        # -------------------------------------------------
+        # Start TCP server on DUT.
+        # -------------------------------------------------
+
+        server_script = f"""
+import socket
+
+HOST = "0.0.0.0"
+PORT = {port}
+
+DUT_PAYLOAD = {dut_payload!r}
+EXPECTED_PEER_PAYLOAD = {peer_payload!r}
+
+
+def receive_line(conn):
+
+    data = b""
+
+    while bytes([10]) not in data:
+
+        chunk = conn.recv(4096)
+
+        if not chunk:
+            break
+
+        data += chunk
+
+    return data.split(bytes([10]), 1)[0]
+
+
+try:
+
+    with socket.socket(
+        socket.AF_INET,
+        socket.SOCK_STREAM
+    ) as server:
+
+        server.setsockopt(
+            socket.SOL_SOCKET,
+            socket.SO_REUSEADDR,
+            1
+        )
+
+        server.settimeout(15)
+
+        server.bind((HOST, PORT))
+
+        server.listen(1)
+
+        print("SERVER_READY", flush=True)
+
+        conn, address = server.accept()
+
+        with conn:
+
+            conn.settimeout(15)
+
+            received = receive_line(conn)
+
+            receive_match = (
+                received == EXPECTED_PEER_PAYLOAD
+            )
+
+            conn.sendall(
+                DUT_PAYLOAD + bytes([10])
+            )
+
+            print(
+                "RECEIVED:",
+                received.decode(),
+                flush=True
+            )
+
+            print(
+                "SENT:",
+                DUT_PAYLOAD.decode(),
+                flush=True
+            )
+
+            print(
+                "RECEIVE_MATCH:",
+                receive_match,
+                flush=True
+            )
+
+            if not receive_match:
+
+                raise ValueError(
+                    "Peer payload did not match"
+                )
+
+except Exception as error:
+
+    print(
+        "SERVER_ERROR:",
+        str(error),
+        flush=True
+    )
+
+    raise
+"""
+
+        server_command = (
+            "python3 -u -c "
+            + shlex.quote(server_script)
+        )
+
+        logger.info(
+            "Starting bidirectional TCP server on DUT"
+        )
+
+        (
+            server_stdin,
+            server_stdout,
+            server_stderr
+        ) = ssh.exec_command(server_command)
+
+        # Allow server startup.
+
+        time.sleep(2)
+
+        # -------------------------------------------------
+        # Run TCP client on peer device.
+        # -------------------------------------------------
+
+        client_script = f"""
+import socket
+
+DUT_HOST = {dut_host!r}
+PORT = {port}
+
+PEER_PAYLOAD = {peer_payload!r}
+EXPECTED_DUT_PAYLOAD = {dut_payload!r}
+
+
+def receive_line(sock):
+
+    data = b""
+
+    while bytes([10]) not in data:
+
+        chunk = sock.recv(4096)
+
+        if not chunk:
+            break
+
+        data += chunk
+
+    return data.split(bytes([10]), 1)[0]
+
+
+try:
+
+    with socket.socket(
+        socket.AF_INET,
+        socket.SOCK_STREAM
+    ) as client:
+
+        client.settimeout(15)
+
+        client.connect((DUT_HOST, PORT))
+
+        client.sendall(
+            PEER_PAYLOAD + bytes([10])
+        )
+
+        received = receive_line(client)
+
+        receive_match = (
+            received == EXPECTED_DUT_PAYLOAD
+        )
+
+        print(
+            "SENT:",
+            PEER_PAYLOAD.decode()
+        )
+
+        print(
+            "RECEIVED:",
+            received.decode()
+        )
+
+        print(
+            "RECEIVE_MATCH:",
+            receive_match
+        )
+
+        if not receive_match:
+
+            raise ValueError(
+                "DUT payload did not match"
+            )
+
+except Exception as error:
+
+    print(
+        "CLIENT_ERROR:",
+        str(error)
+    )
+
+    raise
+"""
+
+        client_command = (
+            "python3 -u -c "
+            + shlex.quote(client_script)
+        )
+
+        logger.info(
+            "Sending peer payload to DUT and "
+            "receiving DUT payload"
+        )
+
+        (
+            client_stdin,
+            client_stdout,
+            client_stderr
+        ) = peer_ssh.exec_command(client_command)
+
+        # Collect client output.
+
+        client_output = (
+            client_stdout.read().decode(
+                errors="replace"
+            )
+        )
+
+        client_error = (
+            client_stderr.read().decode(
+                errors="replace"
+            )
+        )
+
+        client_status = (
+            client_stdout.channel.recv_exit_status()
+        )
+
+        # Collect server output.
+
+        server_output = (
+            server_stdout.read().decode(
+                errors="replace"
+            )
+        )
+
+        server_error = (
+            server_stderr.read().decode(
+                errors="replace"
+            )
+        )
+
+        server_status = (
+            server_stdout.channel.recv_exit_status()
+        )
+
+        logger.info(
+            f"TCP client output:\n{client_output}"
+        )
+
+        logger.info(
+            f"TCP server output:\n{server_output}"
+        )
+
+        if client_error:
+            logger.error(client_error)
+
+        if server_error:
+            logger.error(server_error)
+
+        # -------------------------------------------------
+        # Validate both communication directions.
+        # -------------------------------------------------
+
+        if (
+            client_status == 0
+            and server_status == 0
+            and "RECEIVE_MATCH: True" in client_output
+            and "RECEIVE_MATCH: True" in server_output
+        ):
+
+            remark = (
+                f"Bidirectional TCP communication successful: "
+                f"{peer_host} <-> {dut_host}:{port}; "
+                f"both payloads received and matched."
+            )
+
+            logger.info(remark)
+
+            return make_result(
+                "PASS",
+                remark
+            )
+
+        remark = (
+            "Bidirectional TCP validation failed. "
+            f"Client status: {client_status}; "
+            f"Server status: {server_status}; "
+            f"Client output: {client_output}; "
+            f"Server output: {server_output}; "
+            f"Client error: {client_error}; "
+            f"Server error: {server_error}"
+        )
+
+        logger.error(remark)
+
+        return make_result(
+            "FAIL",
+            remark
+        )
+
+    except Exception as error:
+
+        remark = (
+            f"Bidirectional TCP validation error: {error}"
+        )
+
+        logger.error(remark)
+
+        return make_result(
+            "FAIL",
+            remark
+        )
+
+    finally:
+
+        if peer_ssh is not None:
+
+            peer_ssh.close()
+
+            logger.info(
+                "Peer SSH connection closed"
+            )

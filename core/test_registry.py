@@ -1,3 +1,4 @@
+
 """
 Test Registry Module
 
@@ -27,54 +28,37 @@ from validation.layer3.ping import validate_ping
 
 from validation.layer4.tcp import (
     validate_tcp_connection,
-    validate_tcp_payload
+    validate_tcp_payload,
+    validate_tcp_bidirectional
 )
 
 from validation.layer4.udp import validate_udp_payload
 
 
-
-
 TEST_REGISTRY = {
-
     "interface": validate_interface,
-
     "link": validate_link,
-
     "speed": validate_speed,
-
     "duplex": validate_duplex,
-
     "operstate": validate_operstate,
 
     "mac": validate_mac,
-
     "statistics": validate_statistics,
-
     "ethernet": validate_ethernet,
-
     "arp": validate_arp,
 
     "ip": validate_ip,
-
     "dhcp": validate_dhcp,
-
     "gateway": validate_gateway,
-
     "static_ip": validate_static_ip,
-
     "ipv6_global": validate_ipv6_global,
-
     "ipv6_link_local": validate_ipv6_link_local,
-
     "ping": validate_ping,
 
     "tcp_connection": validate_tcp_connection,
-
     "tcp_payload": validate_tcp_payload,
-
     "udp_payload": validate_udp_payload,
-
+    "tcp_bidirectional": validate_tcp_bidirectional,
 }
 
 
@@ -82,5 +66,6 @@ TEST_REGISTRY = {
 # complete framework configuration.
 CONFIG_AWARE_MODULES = {
     "tcp_payload",
-    "udp_payload"
+    "udp_payload",
+    "tcp_bidirectional"
 }
