@@ -1,89 +1,117 @@
+
 """
 Report Generation Module
 
-Responsible for formatting and displaying
-network validation test results.
+Responsible for displaying validation results
+and generating a JUnit XML report for Jenkins.
 """
+
+import os
+import xml.etree.ElementTree as ET
 
 
 def generate_report(results, config):
     """
-    Generate a readable validation report.
-
-    Args:
-        results (list):
-            List of validation result dictionaries.
-
-        config (dict):
-            Framework configuration loaded from config.yaml.
-
-    Returns:
-        None
+    Generate console and JUnit XML validation reports.
     """
 
-    # Extract framework information
     framework = config["framework"]
-
-    # Extract active device information
     device = config["devices"][config["active_device"]]
 
-    # Count total number of test cases
     total = len(results)
+    passed = sum(1 for result in results if result.get("status") == "PASS")
+    failed = sum(1 for result in results if result.get("status") == "FAIL")
+    skipped = total - passed - failed
 
-    # Initialize counters
-    passed = 0
-
-    failed = 0
-
-    # Print report header
+    # Console report
     print("=" * 60)
-
     print(f"Framework : {framework['name']}")
-
     print(f"Version   : {framework['version']}")
-
     print(f"Board     : {device['board']}")
-
     print(f"IP Address: {device['host']}")
-
     print("=" * 60)
 
-    # Process each test result
     for result in results:
-
-        # Count PASS and FAIL results
-        if result["status"] == "PASS":
-
-            passed += 1
-
-        else:
-
-            failed += 1
-
-        # Print individual test report
-        print(f"Test Case ID : {result['test_case_id']}")
-
-        print(f"Category     : {result['category']}")
-
-        print(f"Type         : {result['type']}")
-
-        print(f"Priority     : {result['priority']}")
-
-        print(f"Description  : {result['description']}")
-
-        print(f"Status       : {result['status']}")
-
-        print(f"Remarks      : {result['remarks']}")
-
+        print(f"Test Case ID : {result.get('test_case_id', 'UNKNOWN')}")
+        print(f"Category     : {result.get('category', 'N/A')}")
+        print(f"Type         : {result.get('type', 'N/A')}")
+        print(f"Priority     : {result.get('priority', 'N/A')}")
+        print(f"Description  : {result.get('description', 'N/A')}")
+        print(f"Status       : {result.get('status', 'NOT_SUPPORTED')}")
+        print(f"Remarks      : {result.get('remarks', result.get('message', 'N/A'))}")
         print("-" * 60)
 
-    # Print final summary
     print("Execution Summary")
-
     print(f"Total Tests : {total}")
-
     print(f"Passed      : {passed}")
-
     print(f"Failed      : {failed}")
-
+    print(f"Skipped     : {skipped}")
     print("=" * 60)
+
+    # Create JUnit XML report
+    report_directory = "reports"
+    os.makedirs(report_directory, exist_ok=True)
+
+    test_suite = ET.Element(
+        "testsuite",
+        name=framework["name"],
+        tests=str(total),
+        failures=str(failed),
+        errors="0",
+        skipped=str(skipped)
+    )
+
+    for result in results:
+        test_id = str(result.get("test_case_id", "UNKNOWN"))
+
+        test_case = ET.SubElement(
+            test_suite,
+            "testcase",
+            name=test_id,
+            classname=str(result.get("category", "NetworkValidation"))
+        )
+
+        status = result.get("status", "NOT_SUPPORTED")
+        remarks = str(
+            result.get("remarks", result.get("message", ""))
+        )
+
+        if status == "FAIL":
+            failure = ET.SubElement(
+                test_case,
+                "failure",
+                message=remarks
+            )
+            failure.text = remarks
+
+        elif status != "PASS":
+            skipped_element = ET.SubElement(
+                test_case,
+                "skipped",
+                message=remarks or status
+            )
+            skipped_element.text = remarks
+
+        properties = ET.SubElement(test_case, "properties")
+
+        for key in ("description", "type", "priority"):
+            value = result.get(key)
+            if value is not None:
+                ET.SubElement(
+                    properties,
+                    "property",
+                    name=key,
+                    value=str(value)
+                )
+
+        if remarks:
+            system_out = ET.SubElement(test_case, "system-out")
+            system_out.text = remarks
+
+    tree = ET.ElementTree(test_suite)
+    ET.indent(tree, space="    ")
+
+    report_path = os.path.join(report_directory, "junit.xml")
+    tree.write(report_path, encoding="utf-8", xml_declaration=True)
+
+    print(f"JUnit XML report generated: {report_path}")
