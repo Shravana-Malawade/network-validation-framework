@@ -24,7 +24,7 @@ def main():
 
     if ssh is None:
         logger.error("Framework stopped because SSH connection failed.")
-        return
+        return 1
 
     results = run_tests(
         ssh, config, logger, selected_test_id
@@ -33,7 +33,7 @@ def main():
     if selected_test_id and not results:
         logger.error(f"No results found for test case: {selected_test_id}")
         ssh.close()
-        return
+        return 1
 
     generate_report(results, config)
 
@@ -41,8 +41,23 @@ def main():
 
     logger.info("SSH connection closed successfully.")
 
+    failed_tests = [
+        result for result in results
+        if result.get("status") != "PASS"
+    ]
+
+    if failed_tests:
+        logger.error(
+            f"Framework completed with {len(failed_tests)} "
+            "failed or unsupported test cases."
+        )
+        return 1
+
+    logger.info("All validation test cases passed.")
     print("Framework executed successfully.")
+
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

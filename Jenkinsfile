@@ -43,6 +43,24 @@ pipeline {
         }
 
         always {
+
+            script {
+                if (fileExists('reports/junit.xml')) {
+                    junit(
+                        testResults: 'reports/junit.xml',
+                        allowEmptyResults: true
+                    )
+                } else {
+                    echo 'JUnit report was not generated.'
+                }
+            }
+
+            archiveArtifacts(
+                artifacts: 'reports/**,logs/**',
+                allowEmptyArchive: true,
+                fingerprint: true
+            )
+
             echo 'Pipeline execution finished.'
         }
     }

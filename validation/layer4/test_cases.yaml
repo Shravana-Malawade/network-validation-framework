@@ -51,3 +51,20 @@
   expected:
     dut_receive_match: true
     peer_receive_match: true
+
+
+- test_case_id: L4_TC_005
+  category: layer4
+  module: udp_bidirectional
+  type: functional
+  priority: high
+  description: Verify bidirectional UDP communication between DUT and peer device.
+  target:
+    peer_device: device2
+    port: 5004
+  parameters:
+    dut_payload: NETWORK_VALIDATION_DUT_TO_PEER
+    peer_payload: NETWORK_VALIDATION_PEER_TO_DUT
+  expected:
+    dut_receive_match: true
+    peer_receive_match: true
