@@ -36,10 +36,38 @@ pipeline {
 
         success {
             echo 'Network Validation completed successfully.'
+
+            mail(
+                to: 'shravanamalawade@gmail.com',
+                subject: "SUCCESS: Network Validation Build #${env.BUILD_NUMBER}",
+                body: """Network Validation completed successfully.
+
+Build Number: #${env.BUILD_NUMBER}
+Job Name: ${env.JOB_NAME}
+Result: ${currentBuild.currentResult}
+
+Test Report: ${env.BUILD_URL}testReport/
+Build Details: ${env.BUILD_URL}
+"""
+            )
         }
 
         failure {
             echo 'Network Validation failed.'
+
+            mail(
+                to: 'shravanamalawade@gmail.com',
+                subject: "FAILURE: Network Validation Build #${env.BUILD_NUMBER}",
+                body: """Network Validation failed.
+
+Build Number: #${env.BUILD_NUMBER}
+Job Name: ${env.JOB_NAME}
+Result: ${currentBuild.currentResult}
+
+Console Output: ${env.BUILD_URL}console
+Build Details: ${env.BUILD_URL}
+"""
+            )
         }
 
         always {
