@@ -37,8 +37,8 @@ pipeline {
         success {
             echo 'Network Validation completed successfully.'
 
-            mail(
-                to: 'shravanamalawade@gmail.com',
+            emailext(
+                to: 'shravanamalawade@gmail.com, sachin@nyxses.com',
                 subject: "SUCCESS: Network Validation Build #${env.BUILD_NUMBER}",
                 body: """Network Validation completed successfully.
 
@@ -46,17 +46,18 @@ Build Number: #${env.BUILD_NUMBER}
 Job Name: ${env.JOB_NAME}
 Result: ${currentBuild.currentResult}
 
-Test Report: ${env.BUILD_URL}testReport/
+JUnit Test Report: ${env.BUILD_URL}testReport/
 Build Details: ${env.BUILD_URL}
-"""
+""",
+                attachmentsPattern: 'reports/junit.xml'
             )
         }
 
         failure {
             echo 'Network Validation failed.'
 
-            mail(
-                to: 'shravanamalawade@gmail.com',
+            emailext(
+                to: 'shravanamalawade@gmail.com, sachin@nyxses.com',
                 subject: "FAILURE: Network Validation Build #${env.BUILD_NUMBER}",
                 body: """Network Validation failed.
 
@@ -64,9 +65,11 @@ Build Number: #${env.BUILD_NUMBER}
 Job Name: ${env.JOB_NAME}
 Result: ${currentBuild.currentResult}
 
+JUnit Test Report: ${env.BUILD_URL}testReport/
 Console Output: ${env.BUILD_URL}console
 Build Details: ${env.BUILD_URL}
-"""
+""",
+                attachmentsPattern: 'reports/junit.xml'
             )
         }
 
