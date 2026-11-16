@@ -1,3 +1,4 @@
+
 pipeline {
 
     agent any
@@ -34,65 +35,69 @@ pipeline {
 
     post {
 
-        success {
-            echo 'Network Validation completed successfully.'
-
-            emailext(
-                to: 'shravanamalawade@gmail.com, sachin@nyxses.com',
-                subject: "SUCCESS: Network Validation Build #${env.BUILD_NUMBER}",
-                body: """Network Validation completed successfully.
-
-Build Number: #${env.BUILD_NUMBER}
-Job Name: ${env.JOB_NAME}
-Result: ${currentBuild.currentResult}
-
-JUnit Test Report: ${env.BUILD_URL}testReport/
-Build Details: ${env.BUILD_URL}
-""",
-                attachmentsPattern: 'reports/junit.xml'
-            )
-        }
-
-        failure {
-            echo 'Network Validation failed.'
-
-            emailext(
-                to: 'shravanamalawade@gmail.com, sachin@nyxses.com',
-                subject: "FAILURE: Network Validation Build #${env.BUILD_NUMBER}",
-                body: """Network Validation failed.
-
-Build Number: #${env.BUILD_NUMBER}
-Job Name: ${env.JOB_NAME}
-Result: ${currentBuild.currentResult}
-
-JUnit Test Report: ${env.BUILD_URL}testReport/
-Console Output: ${env.BUILD_URL}console
-Build Details: ${env.BUILD_URL}
-""",
-                attachmentsPattern: 'reports/junit.xml'
-            )
-        }
-
         always {
 
             script {
+
+                def summary = null
+
                 if (fileExists('reports/junit.xml')) {
-                    junit(
+
+                    summary = junit(
                         testResults: 'reports/junit.xml',
                         allowEmptyResults: true
                     )
+
+                    echo 'JUnit report published successfully.'
+
                 } else {
                     echo 'JUnit report was not generated.'
                 }
+
+                archiveArtifacts(
+                    artifacts: 'reports/**,logs/**',
+                    allowEmptyArchive: true,
+                    fingerprint: true
+                )
+
+                def total = summary ? summary.totalCount : 'N/A'
+                def passed = summary ? summary.passCount : 'N/A'
+                def failed = summary ? summary.failCount : 'N/A'
+                def skipped = summary ? summary.skipCount : 'N/A'
+
+                emailext(
+                    to: 'shravanamalawade@gmail.com, sachin@nyxses.com',
+
+                    subject: "${currentBuild.currentResult}: Network Validation Build #${env.BUILD_NUMBER}",
+
+                    body: """Network Validation Build Report
+
+Build Number : #${env.BUILD_NUMBER}
+Job Name     : ${env.JOB_NAME}
+Build Status : ${currentBuild.currentResult}
+
+TEST SUMMARY
+------------
+Total Tests   : ${total}
+Passed        : ${passed}
+Failed        : ${failed}
+Skipped       : ${skipped}
+
+REPORTS
+-------
+JUnit Report : ${env.BUILD_URL}testReport/
+Build Details: ${env.BUILD_URL}
+Console Log  : ${env.BUILD_URL}console
+
+The JUnit report and available framework logs are attached.
+""",
+
+                    attachmentsPattern: 'reports/junit.xml,logs/**',
+                    attachLog: true
+                )
+
+                echo 'Build report email notification triggered.'
             }
-
-            archiveArtifacts(
-                artifacts: 'reports/**,logs/**',
-                allowEmptyArchive: true,
-                fingerprint: true
-            )
-
-            echo 'Pipeline execution finished.'
         }
     }
 }
