@@ -1,4 +1,3 @@
-
 pipeline {
 
     agent any
@@ -8,6 +7,12 @@ pipeline {
         stage('Checkout') {
             steps {
                 echo 'Repository checked out successfully.'
+            }
+        }
+
+        stage('Clear Previous Validation Output') {
+            steps {
+                sh 'rm -f -- reports/junit.xml logs/framework.log'
             }
         }
 
