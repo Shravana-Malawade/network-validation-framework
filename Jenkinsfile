@@ -12,7 +12,7 @@ pipeline {
 
         stage('Clear Previous Validation Output') {
             steps {
-                sh 'rm -f -- reports/junit.xml logs/framework.log'
+                sh 'rm -f -- reports/junit.xml logs/framework.log reports/pcap/L4_TC_002.pcap reports/pcap/L4_TC_004.pcap'
             }
         }
 
@@ -33,6 +33,8 @@ pipeline {
                 sh '''
                     . .venv/bin/activate
                     python3 main.py
+                    test -s reports/pcap/L4_TC_002.pcap
+                    test -s reports/pcap/L4_TC_004.pcap
                 '''
             }
         }

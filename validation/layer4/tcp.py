@@ -9,8 +9,88 @@ between the Device Under Test and peer device.
 import socket
 import shlex
 import time
+from pathlib import Path
 
 from core.ssh import connect_device
+
+
+class _TcpCapture:
+    """Capture one test's traffic on the DUT and download the PCAP."""
+
+    def __init__(self, ssh, logger):
+        self.ssh = ssh
+        self.logger = logger
+        self.directory = ""
+        self.channel = None
+
+    def start(self, peer_host, port):
+        command = f"""
+set -eu
+peer={shlex.quote(peer_host)}
+iface=$(ip -o route get "$peer" | awk '{{for (i=1; i<NF; i++) if ($i=="dev") {{print $(i+1); exit}}}}')
+test -n "$iface"
+dir=$(mktemp -d)
+printf '%s\\n' "$dir"
+status=0
+sudo -n timeout --signal=INT --kill-after=3s 25s /usr/bin/tcpdump \\
+    -i "$iface" -nn -p -U -w - "tcp port {port} and host $peer" > "$dir/test.pcap" || status=$?
+case "$status" in
+    0|124) ;;
+    *) exit "$status" ;;
+esac
+/usr/bin/tcpdump -nn -c 1 -r "$dir/test.pcap"
+"""
+        _, stdout, stderr = self.ssh.exec_command(command, timeout=35)
+        self.channel = stdout.channel
+        self.stdout = stdout
+        self.stderr = stderr
+        self.directory = stdout.readline().strip()
+
+        for line in stderr:
+            if "tcpdump: listening on " in line:
+                return
+            self.logger.info(line.rstrip())
+
+        raise RuntimeError("DUT tcpdump did not report that it was listening")
+
+    def save(self, test_id):
+        if self.channel is None:
+            return
+
+        try:
+            packet = self.stdout.read().decode(errors="replace").strip()
+            diagnostics = self.stderr.read().decode(errors="replace").strip()
+            if diagnostics:
+                self.logger.info(diagnostics)
+            if self.channel.recv_exit_status() != 0 or not packet:
+                raise RuntimeError("DUT capture did not produce a readable packet")
+
+            destination = Path("reports") / "pcap" / f"{test_id}.pcap"
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            temporary = destination.with_suffix(".pcap.part")
+            try:
+                with self.ssh.open_sftp() as sftp:
+                    sftp.get(f"{self.directory}/test.pcap", str(temporary))
+                temporary.replace(destination)
+            finally:
+                temporary.unlink(missing_ok=True)
+            self.logger.info(f"TCP packet capture saved to {destination}")
+        except Exception:
+            self.logger.exception(f"Could not save PCAP for {test_id}")
+        finally:
+            self.channel.close()
+            if self.directory.startswith("/tmp/"):
+                directory = shlex.quote(self.directory)
+                try:
+                    _, output, _ = self.ssh.exec_command(
+                        f'rm -f -- {directory}/test.pcap && rmdir -- {directory}',
+                        timeout=5,
+                    )
+                    output.read()
+                    if output.channel.recv_exit_status() != 0:
+                        self.logger.warning(f"Could not remove {self.directory} on DUT")
+                except Exception:
+                    self.logger.exception(f"Could not remove {self.directory} on DUT")
 
 
 def validate_tcp_connection(ssh, test_case, logger):
@@ -137,7 +217,9 @@ def validate_tcp_payload(ssh, test_case, logger, config):
                 "to peer device"
         }
 
+    capture = _TcpCapture(ssh, logger)
     try:
+        capture.start(peer_host, port)
 
         # Start TCP echo server on DUT.
 
@@ -292,8 +374,10 @@ def validate_tcp_payload(ssh, test_case, logger, config):
         }
 
     finally:
-
-        peer_ssh.close()
+        try:
+            capture.save("L4_TC_002")
+        finally:
+            peer_ssh.close()
 
         logger.info("Peer SSH connection closed")
 
@@ -312,6 +396,7 @@ def validate_tcp_bidirectional(ssh, test_case, logger, config):
     )
 
     peer_ssh = None
+    capture = _TcpCapture(ssh, logger)
 
     # Build a result using the framework's existing format.
     def make_result(status, remarks):
@@ -383,6 +468,8 @@ def validate_tcp_bidirectional(ssh, test_case, logger, config):
                 "Unable to establish SSH connection "
                 "to peer device"
             )
+
+        capture.start(peer_host, port)
 
         # -------------------------------------------------
         # Start TCP server on DUT.
@@ -708,10 +795,11 @@ except Exception as error:
         )
 
     finally:
-
-        if peer_ssh is not None:
-
-            peer_ssh.close()
+        try:
+            capture.save("L4_TC_004")
+        finally:
+            if peer_ssh is not None:
+                peer_ssh.close()
 
             logger.info(
                 "Peer SSH connection closed"
