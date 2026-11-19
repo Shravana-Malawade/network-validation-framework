@@ -1,4 +1,3 @@
-
 import sys
 
 from utils.config_loader import load_config
@@ -25,6 +24,33 @@ def main():
     if ssh is None:
         logger.error("Framework stopped because SSH connection failed.")
         return 1
+
+    print("=== DUT PCAP smoke check ===", flush=True)
+
+    capture_command = r"""
+set -eu
+whoami
+hostname
+
+pcap_dir=$(mktemp -d)
+pcap_file="$pcap_dir/smoke.pcap"
+trap 'rm -f -- "$pcap_file"; rmdir -- "$pcap_dir"' EXIT
+
+ping -n -c 5 -i 1 127.0.0.1 >/dev/null &
+
+sudo -n timeout --signal=INT 10s /usr/bin/tcpdump \
+    -i lo -nn -p -c 2 -w "$pcap_file" 'icmp and host 127.0.0.1'
+
+/usr/bin/tcpdump -nn -r "$pcap_file"
+"""
+
+    _, capture_stdout, capture_stderr = ssh.exec_command(
+        capture_command, timeout=20
+    )
+    print(capture_stdout.read().decode(errors="replace"), end="", flush=True)
+    print(capture_stderr.read().decode(errors="replace"), end="", flush=True)
+    capture_status = capture_stdout.channel.recv_exit_status()
+    print(f"DUT PCAP smoke check exit status: {capture_status}", flush=True)
 
     results = run_tests(
         ssh, config, logger, selected_test_id
