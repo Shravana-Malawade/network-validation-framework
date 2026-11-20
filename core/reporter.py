@@ -7,10 +7,10 @@ timing, and setup failures for use in the detailed validation report.
 """Write console, JUnit XML, and JSON reports for network validation."""
 
 """Build console, JSON, JUnit, HTML, and DUT network reports."""
+"""Generate console, JSON, JUnit, HTML, and DUT network reports."""
 
 import json
 import os
-import re
 import xml.etree.ElementTree as ET
 from collections import Counter
 from datetime import datetime, timedelta, timezone
@@ -47,11 +47,7 @@ RUNNER_DETAILS = {
 
 
 def collect_dut_information(ssh):
-    """Collect read-only DUT facts and selected kernel network information.
-
-    Each query has an SSH channel timeout. A failed query is represented
-    as unavailable and does not change the suite verdict.
-    """
+    """Return live target facts and network details from the DUT over SSH."""
     queries = {
         "Hostname": "hostname",
         "Architecture": "uname -m",
@@ -73,8 +69,7 @@ def collect_dut_information(ssh):
             if len(raw) <= 8192 and channel.recv_exit_status() == 0:
                 values[label] = raw.decode("utf-8", errors="replace").strip() or None
         except Exception:
-            # Remote errors can include arbitrary text. Keep the snapshot
-            # usable when an individual diagnostic command is unavailable.
+            # A diagnostic query can fail independently of the validation suite.
             values[label] = None
         finally:
             if channel is not None:
@@ -95,14 +90,13 @@ def collect_dut_information(ssh):
 
 
 def report_test(result):
-    """Project a validator result onto the fields used by report artifacts."""
+    """Return the fields and reviewed diagnostic text used in reports."""
     test_id = result.get("test_case_id") or "UNKNOWN"
     status = result.get("status")
     if status not in STATUS_LABELS:
         status = "UNKNOWN"
 
-    # Publish reviewed messages and fixed status descriptions. Raw command
-    # output and exception strings can contain credentials.
+    # Raw validator errors can contain command output or credentials.
     details = result.get("report_detail")
     remarks = result.get("remarks")
     if isinstance(details, str) and details in RUNNER_DETAILS:
@@ -125,7 +119,7 @@ def report_test(result):
 
 
 def write_junit(report, path):
-    """Write Jenkins-compatible JUnit XML with one entry per result."""
+    """Write Jenkins-compatible JUnit XML with one entry per test result."""
     counts = report["status_counts"]
     skipped = sum(
         counts.get(status, 0)
@@ -151,19 +145,20 @@ def write_junit(report, path):
             case.set("time", f"{result['duration_seconds']:.6f}")
 
         status = result["status"]
+        remarks = result["remarks"]
         if status == "FAIL":
-            ET.SubElement(case, "failure", message=result["remarks"]).text = result["remarks"]
+            ET.SubElement(case, "failure", message=remarks).text = remarks
         elif status in ("ERROR", "UNKNOWN"):
-            ET.SubElement(case, "error", message=result["remarks"]).text = result["remarks"]
+            ET.SubElement(case, "error", message=remarks).text = remarks
         elif status in ("BLOCKED", "NOT_SUPPORTED", "SKIPPED"):
-            ET.SubElement(case, "skipped", message=result["remarks"]).text = status
+            ET.SubElement(case, "skipped", message=remarks).text = status
 
         properties = ET.SubElement(case, "properties")
         for key in ("description", "type", "priority", "status"):
             if result[key] is not None:
                 ET.SubElement(properties, "property", name=key, value=str(result[key]))
 
-        ET.SubElement(case, "system-out").text = result["remarks"]
+        ET.SubElement(case, "system-out").text = remarks
 
     tree = ET.ElementTree(suite)
     ET.indent(tree, space="    ")
@@ -184,9 +179,10 @@ def table(headers, rows):
 
 
 def display_time(timestamp):
-    """Convert a recorded UTC timestamp to IST for the report."""
+    """Convert a recorded UTC timestamp to IST for display."""
     if not timestamp:
         return None
+
     ist = timezone(timedelta(hours=5, minutes=30))
     return datetime.fromisoformat(timestamp).astimezone(ist).strftime(
         "%d-%b-%Y %H:%M:%S IST"
@@ -194,24 +190,27 @@ def display_time(timestamp):
 
 
 def display_duration(seconds):
-    """Format elapsed seconds for readers."""
+    """Format elapsed seconds for display."""
     return None if seconds is None else f"{seconds:.3f} s"
 
 
 def write_html(report, path):
-    """Render the validation report as standalone HTML and an email body."""
+    """Render the standalone HTML report used as the Jenkins email body."""
     build = report["build"]
     timing = report["run_timing"] or {}
     counts = report["status_counts"]
     tests = report["tests"]
+
     suite_rows = [
         ("Storage", report["storage_status"], "—", "—", "—", "—", "—", "—", "—"),
         (
-            "Network", report["run_status"],
+            "Network",
+            report["run_status"],
             *(counts.get(status, 0) for status in STATUS_LABELS[:6]),
             display_duration(timing.get("duration_seconds")),
         ),
     ]
+
     layer_rows = []
     for layer in sorted({result["category"] or "Uncategorized" for result in tests}):
         layer_tests = [
@@ -224,7 +223,8 @@ def write_html(report, path):
             if result["duration_seconds"] is not None
         ]
         layer_rows.append((
-            layer, len(layer_tests),
+            layer,
+            len(layer_tests),
             *(layer_counts.get(status, 0) for status in STATUS_LABELS),
             display_duration(sum(durations) if durations else None),
         ))
@@ -235,6 +235,32 @@ def write_html(report, path):
     ]
     if report["run_reason"]:
         attention.insert(0, ("Run", report["run_status"], report["run_reason"]))
+
+    if attention:
+        outcome_html = table(("Test case", "Status", "Details"), attention)
+    elif tests and counts.get("PASS") == len(tests) and report["run_status"] == "PASS":
+        outcome_html = (
+            f"<p>All {len(tests)} network tests passed. "
+            f"Failed: {counts.get('FAIL', 0)} · "
+            f"Blocked: {counts.get('BLOCKED', 0)} · "
+            f"Skipped: {counts.get('SKIPPED', 0)}.</p>"
+        )
+    elif not tests:
+        outcome_html = "<p>No network tests ran.</p>"
+    else:
+        outcome_html = f"<p>Run status: {escape(report['run_status'])}.</p>"
+
+    # Interface names come from the DUT snapshot. Alias mappings are separate.
+    interfaces = ", ".join(report.get("detected_interfaces", []))
+    if interfaces:
+        resource_text = (
+            f"Detected DUT network interfaces: {interfaces}. "
+            "No EmbITE alias was verified."
+        )
+    elif report.get("interface_snapshot_available"):
+        resource_text = "The DUT reported no network interfaces other than loopback."
+    else:
+        resource_text = "DUT interface information was unavailable for this run."
 
     build_url = build["url"]
     parsed_url = urlsplit(build_url) if build_url else None
@@ -260,7 +286,6 @@ def write_html(report, path):
     else:
         links_html = "<p>Jenkins links are unavailable for this run.</p>"
 
-    artifact_rows = [(artifact,) for artifact in report["artifacts"]]
     run_info = [
         ("Project", report["project"]),
         ("Status", report["run_status"]),
@@ -273,6 +298,18 @@ def write_html(report, path):
         ("End", display_time(timing.get("finished_at"))),
         ("Duration", display_duration(timing.get("duration_seconds"))),
     ]
+    individual_rows = (
+        (
+            result["test_case_id"],
+            result["category"],
+            result["description"],
+            result["status"],
+            display_duration(result["duration_seconds"]),
+            result["remarks"],
+        )
+        for result in tests
+    )
+    artifact_rows = [(artifact,) for artifact in report["artifacts"]]
 
     html = f"""<!doctype html>
 <html lang="en">
@@ -301,22 +338,13 @@ th {{background: #edf2f8;}}
 <h2>Network results by layer</h2>
 {table(("Layer", "Results", *STATUS_LABELS, "Validator time"), layer_rows)}
 <h2>Individual network results</h2>
-{table(
-    ("Test case", "Layer", "Description", "Status", "Duration", "Details"),
-    (
-        (
-            test["test_case_id"], test["category"], test["description"],
-            test["status"], display_duration(test["duration_seconds"]), test["remarks"],
-        )
-        for test in tests
-    ),
-)}
+{table(("Test case", "Layer", "Description", "Status", "Duration", "Details"), individual_rows)}
 <h2>Resource mapping</h2>
-<p>No verified EmbITE alias mapping is available for this run.</p>
+<p>{escape(resource_text)}</p>
 <h2>Failures, blocked tests, and other non-pass outcomes</h2>
-{table(("Test case", "Status", "Details"), attention) if attention else "<p>No non-pass outcomes were recorded.</p>"}
+{outcome_html}
 <h2>Storage safety checks</h2>
-<p>Not applicable for this run.</p>
+<p>Not applicable. This run covered network validation only. No storage tests or storage safety checks were executed.</p>
 <h2>Generated reports</h2>
 {table(("Artifact",), artifact_rows)}
 {links_html}
@@ -334,10 +362,10 @@ def generate_report(
     run_status=None, run_reason=None, connected=None, selected_test_id=None,
     target_info=None, network_snapshot=None,
 ):
-    """Write validation artifacts and print a concise execution summary.
+    """Write validation artifacts and print the execution summary.
 
-    The optional setup_failure argument also supports existing reporter
-    smoke tests. JUnit uses actual case results, including zero-case runs.
+    Empty result lists are supported for blocked setup and zero-test runs.
+    Target facts and the network snapshot are optional when SSH is unavailable.
     """
     framework = config["framework"]
     device = config["devices"][config["active_device"]]
@@ -367,15 +395,24 @@ def generate_report(
         "EmbITE version": "Unverified",
         **(target_info or {}),
     }
+
     report_directory = Path("reports")
     report_directory.mkdir(exist_ok=True)
 
-    snapshot_path = report_directory / "network_info.txt"
+    network = network_snapshot or {}
+    interface_output = network.get("Interfaces") or ""
+    interface_names = [
+        line.split(maxsplit=1)[0]
+        for line in interface_output.splitlines()
+        if line.strip()
+    ]
+    detected_interfaces = [name for name in interface_names if name != "lo"]
+
     sections = [
         f"{label}\n{value or 'Unavailable'}"
-        for label, value in (network_snapshot or {}).items()
+        for label, value in network.items()
     ]
-    snapshot_path.write_text(
+    (report_directory / "network_info.txt").write_text(
         "\n\n".join(sections or ["DUT network snapshot unavailable."]) + "\n",
         encoding="utf-8",
     )
@@ -398,6 +435,8 @@ def generate_report(
         },
         "target": target,
         "resource_mappings": {},
+        "detected_interfaces": detected_interfaces,
+        "interface_snapshot_available": bool(interface_output.strip()),
         "total_tests": len(tests),
         "status_counts": counts,
         "tests": tests,
