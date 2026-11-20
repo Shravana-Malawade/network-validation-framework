@@ -6,8 +6,8 @@ pipeline {
     }
 
     environment {
-        VALIDATION_EMAIL_TO = 'shravanamalawade@gmail.com'
-        EMBITE_BUILD_TRIGGER = 'Unknown'
+        VALIDATION_EMAIL_TO = 'shravanamalawade@gmail.com, anilmaharajpet1111@gmail.com'
+
     }
 
     stages {
