@@ -6,7 +6,7 @@ pipeline {
     }
 
     environment {
-        VALIDATION_EMAIL_TO = 'shravanamalawade@gmail.com, anilmaharajpet1111@gmail.com'
+        VALIDATION_EMAIL_TO = 'shravanamalawade@gmail.com, sachin@nyxses.com '
 
     }
 
