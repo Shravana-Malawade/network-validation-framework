@@ -1,18 +1,32 @@
 pipeline {
-
     agent any
 
-    stages {
+    options {
+        skipDefaultCheckout()
+    }
 
-        stage('Checkout') {
+    environment {
+        VALIDATION_EMAIL_TO = 'shravanamalawade@gmail.com'
+        EMBITE_BUILD_TRIGGER = 'Unknown'
+    }
+
+    stages {
+        stage('Clear Previous Validation Output') {
             steps {
-                echo 'Repository checked out successfully.'
+                // Remove exact generated paths before checkout so a setup
+                // failure cannot publish a previous run's reports.
+                sh '''
+                    rm -f -- reports/junit.xml reports/results.json \
+                        reports/summary.html reports/network_info.txt \
+                        logs/framework.log \
+                        reports/pcap/L4_TC_002.pcap reports/pcap/L4_TC_004.pcap
+                '''
             }
         }
 
-        stage('Clear Previous Validation Output') {
+        stage('Checkout') {
             steps {
-                sh 'rm -f -- reports/junit.xml logs/framework.log reports/pcap/L4_TC_002.pcap reports/pcap/L4_TC_004.pcap'
+                checkout scm
             }
         }
 
@@ -21,89 +35,139 @@ pipeline {
                 sh '''
                     rm -rf .venv
                     python3 -m venv .venv
-                    . .venv/bin/activate
-                    python -m pip install --upgrade pip
-                    pip install -r requirements.txt
+                    .venv/bin/python -m pip install --upgrade pip
+                    .venv/bin/python -m pip install -r requirements.txt
                 '''
             }
         }
 
         stage('Run Network Validation') {
             steps {
-                sh '''
-                    . .venv/bin/activate
-                    python3 main.py
-                    test -s reports/pcap/L4_TC_002.pcap
-                    test -s reports/pcap/L4_TC_004.pcap
-                '''
+                script {
+                    // Use recognized cause types. Free-text cause descriptions
+                    // can include user or upstream job details.
+                    def causes = currentBuild.getBuildCauses()
+                    def labels = []
+                    for (def cause : causes) {
+                        def causeClass = cause['_class'].toString()
+                        if (causeClass.endsWith('UserIdCause')) {
+                            labels.add('Manual')
+                        } else if (causeClass.endsWith('TimerTriggerCause')) {
+                            labels.add('Scheduled')
+                        } else if (causeClass.endsWith('SCMTriggerCause')) {
+                            labels.add('SCM change')
+                        } else if (causeClass.endsWith('UpstreamCause')) {
+                            labels.add('Upstream build')
+                        } else if (causeClass.endsWith('RemoteCause')) {
+                            labels.add('Remote trigger')
+                        } else {
+                            labels.add('Jenkins trigger')
+                        }
+                    }
+                    env.EMBITE_BUILD_TRIGGER = labels ? labels.unique().join(', ') : 'Unknown'
+
+                    int validationExit = sh(
+                        script: '.venv/bin/python -u main.py',
+                        returnStatus: true
+                    )
+
+                    if (validationExit != 0) {
+                        error("Network validation exited with code ${validationExit}. See the validation report.")
+                    }
+
+                    sh '''
+                        test -s reports/pcap/L4_TC_002.pcap || {
+                            echo 'Missing or empty capture for L4_TC_002'
+                            exit 1
+                        }
+                        test -s reports/pcap/L4_TC_004.pcap || {
+                            echo 'Missing or empty capture for L4_TC_004'
+                            exit 1
+                        }
+                    '''
+                }
             }
         }
     }
 
     post {
-
         always {
-
             script {
-
-                def summary = null
-
                 if (fileExists('reports/junit.xml')) {
-
-                    summary = junit(
-                        testResults: 'reports/junit.xml',
-                        allowEmptyResults: true
-                    )
-
-                    echo 'JUnit report published successfully.'
-
-                } else {
-                    echo 'JUnit report was not generated.'
+                    catchError(buildResult: 'FAILURE', catchInterruptions: false) {
+                        junit testResults: 'reports/junit.xml', allowEmptyResults: true
+                    }
                 }
 
-                archiveArtifacts(
-                    artifacts: 'reports/**,logs/**',
-                    allowEmptyArchive: true,
-                    fingerprint: true
-                )
+                catchError(buildResult: 'FAILURE', catchInterruptions: false) {
+                    archiveArtifacts(
+                        artifacts: 'reports/**,logs/framework.log',
+                        allowEmptyArchive: true,
+                        fingerprint: true
+                    )
+                }
 
-                def total = summary ? summary.totalCount : 'N/A'
-                def passed = summary ? summary.passCount : 'N/A'
-                def failed = summary ? summary.failCount : 'N/A'
-                def skipped = summary ? summary.skipCount : 'N/A'
+                def validationStatus = 'UNAVAILABLE'
+                def project = env.JOB_NAME
+                def html = null
 
-                emailext(
-                    to: 'shravanamalawade@gmail.com, sachin@nyxses.com',
+                if (fileExists('reports/results.json') &&
+                    fileExists('reports/summary.html')) {
+                    catchError(buildResult: 'FAILURE', catchInterruptions: false) {
+                        def metadata = sh(
+                            script: '''python3 -c '
+import json
+from pathlib import Path
 
-                    subject: "${currentBuild.currentResult}: Network Validation Build #${env.BUILD_NUMBER}",
+report = json.loads(Path("reports/results.json").read_text(encoding="utf-8"))
+print(report["run_status"])
+print(" ".join(str(report["project"]).split()))
+'
+''',
+                            returnStdout: true
+                        ).trim().readLines()
 
-                    body: """Network Validation Build Report
+                        validationStatus = metadata[0]
+                        project = metadata[1]
+                        html = readFile(file: 'reports/summary.html', encoding: 'UTF-8')
+                    }
+                }
 
-Build Number : #${env.BUILD_NUMBER}
-Job Name     : ${env.JOB_NAME}
-Build Status : ${currentBuild.currentResult}
+                def buildStatus = currentBuild.currentResult
+                def subject = "EmbITE | ${validationStatus} | ${project} | " +
+                    "Network Validation | Storage Not Integrated | Build #${env.BUILD_NUMBER}"
 
-TEST SUMMARY
-------------
-Total Tests   : ${total}
-Passed        : ${passed}
-Failed        : ${failed}
-Skipped       : ${skipped}
+                if (html != null) {
+                    def body = html.replace(
+                        '<body>',
+                        "<body><p><strong>Jenkins build status</strong> ${buildStatus}</p>"
+                    )
+                    emailext(
+                        to: env.VALIDATION_EMAIL_TO,
+                        subject: subject,
+                        mimeType: 'text/html',
+                        body: body
+                    )
+                } else {
+                    emailext(
+                        to: env.VALIDATION_EMAIL_TO,
+                        subject: subject,
+                        mimeType: 'text/plain',
+                        body: """Hello Team,
 
-REPORTS
--------
-JUnit Report : ${env.BUILD_URL}testReport/
-Build Details: ${env.BUILD_URL}
-Console Log  : ${env.BUILD_URL}console
+Jenkins build #${env.BUILD_NUMBER} finished with status ${buildStatus}.
+The detailed network validation report is unavailable for this build.
+Storage Validation: Not Integrated / Not Executed.
 
-The JUnit report and available framework logs are attached.
-""",
+Build: ${env.BUILD_URL}
+Console: ${env.BUILD_URL}console
 
-                    attachmentsPattern: 'reports/junit.xml,logs/**',
-                    attachLog: true
-                )
-
-                echo 'Build report email notification triggered.'
+Regards,
+EmbITE Automation
+NYXSES
+"""
+                    )
+                }
             }
         }
     }

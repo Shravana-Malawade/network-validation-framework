@@ -401,8 +401,29 @@ except Exception as error:
         logger.info("Starting bidirectional UDP server on DUT")
 
         _, server_stdout, server_stderr = ssh.exec_command(
-            server_command
+            server_command,
+            timeout=5,
         )
+
+        # Wait until the DUT has bound the UDP socket before sending.
+        server_channel = server_stdout.channel
+        try:
+            ready_line = server_stdout.readline()
+            if isinstance(ready_line, bytes):
+                ready_line = ready_line.decode("utf-8", errors="replace")
+        except TimeoutError:
+            server_channel.close()
+            logger.error("DUT UDP server readiness timed out.")
+            return make_result("FAIL", "DUT UDP server readiness timed out.")
+
+        if ready_line.strip() != "SERVER_READY":
+            server_channel.close()
+            logger.error("DUT UDP server did not confirm readiness.")
+            return make_result("FAIL", "DUT UDP server did not confirm readiness.")
+
+        # Give the DUT's 15-second socket timeout time to report diagnostics.
+        server_channel.settimeout(20)
+        logger.info("DUT UDP server is ready on port %s.", port)
 
         # Start peer client.
         client_script = f"""
@@ -457,7 +478,7 @@ except Exception as error:
 
         client_status = client_stdout.channel.recv_exit_status()
 
-        server_output = server_stdout.read().decode(
+        server_output = ready_line + server_stdout.read().decode(
             errors="replace"
         )
 
